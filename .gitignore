@@ -30,8 +30,12 @@ hs_err_pid*
 # don't check in the idea directory
 .idea
 *.iml
+.scalafmt.conf
 
 *.swp
+
+# SBT
+.bsp/
 
 target/surefire-reports/
 
