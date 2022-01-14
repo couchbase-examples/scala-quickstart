@@ -31,4 +31,15 @@ object ProfileController {
     }
   }
 
+  def deleteProfile(pid: UUID): Either[String, Profile] = {
+    profileMap.remove(pid) match {
+      case None => Left(s"Profile ID: $pid was not found.")
+      case Some(profile) => Right(profile)
+    }
+  }
+
+  def profileListing(): Either[Unit, List[Profile]] = {
+    Right(profileMap.values.toList)
+  }
+
 }

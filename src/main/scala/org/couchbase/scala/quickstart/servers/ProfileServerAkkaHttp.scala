@@ -19,7 +19,8 @@ object ProfileServerAkkaHttp {
   implicit val system = ActorSystem(Behaviors.empty, "akka-http-actor-system")
   implicit val executionContext = system.executionContext
 
-  var bindingFuture: Future[ServerBinding]  = Future.failed(new IllegalStateException("Server not yet started"))
+  var bindingFuture: Future[ServerBinding] =
+    Future.failed(new IllegalStateException("Server not yet started"))
 
   val getProfileRoute: Route =
     AkkaHttpServerInterpreter().toRoute(
@@ -35,12 +36,19 @@ object ProfileServerAkkaHttp {
       )
     )
 
-  val helloRoute =
-    path("hello") {
-      get {
-        complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "Hello, World!"))
-      }
-    }
+  val deleteProfileRoute: Route =
+    AkkaHttpServerInterpreter().toRoute(
+      Endpoints.deleteProfile.serverLogic(pid =>
+        Future.successful(ProfileController.deleteProfile(pid))
+      )
+    )
+
+  val profileListingRoute: Route =
+    AkkaHttpServerInterpreter().toRoute(
+      Endpoints.profileListing.serverLogic(_ =>
+        Future.successful(ProfileController.profileListing())
+      )
+    )
 
 // TODO: probably remove, but use for sanity checking
   val swaggerRoute =
@@ -51,7 +59,11 @@ object ProfileServerAkkaHttp {
   )
 
   def startAkkaHttpServer(): Unit = {
-    bindingFuture = Http().newServerAt("localhost", 8081).bind(getProfileRoute ~ postProfileRoute ~ swaggerOpenAPIRoute ~ helloRoute)
+    bindingFuture = Http()
+      .newServerAt("localhost", 8081)
+      .bind(
+        getProfileRoute ~ postProfileRoute ~ profileListingRoute ~ swaggerOpenAPIRoute
+      )
   }
 
   def stopAkkaHttpServer(): Unit = {
