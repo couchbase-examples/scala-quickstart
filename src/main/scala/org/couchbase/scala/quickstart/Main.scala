@@ -1,17 +1,20 @@
 package org.couchbase.scala.quickstart
 
-import org.couchbase.scala.quickstart.servers.ProfileServerAkkaHttp
+import org.couchbase.scala.quickstart.servers.{ProfileServerAkkaHttp, ProfileServerHttp4s}
 
 import scala.io.StdIn
 
 object Main {
   def main(args: Array[String]): Unit = {
     println("Hello, World!")
-    ProfileServerAkkaHttp.startAkkaHttpServer()
-
+    val akkaServer = ProfileServerAkkaHttp.startAkkaHttpServer()
     println("Akka running, see http://localhost:8081/docs for the Swagger UI")
+    val http4sFiber = ProfileServerHttp4s.startServer()
+    println("Http4s server running, see http://localhost:8082/docs")
+
     StdIn.readLine()
-    ProfileServerAkkaHttp.stopAkkaHttpServer()
+    ProfileServerAkkaHttp.stopAkkaHttpServer(akkaServer)
+    ProfileServerHttp4s.stopServer(http4sFiber)
 
 
   }
