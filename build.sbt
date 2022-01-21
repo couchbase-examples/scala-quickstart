@@ -21,6 +21,8 @@ val tapirVersion = "0.19.3"
 
 libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.2.10",
+  "com.couchbase.client" %% "scala-client" % "1.2.4",
+  "com.github.pureconfig" %% "pureconfig" % "0.17.1",
   "com.github.t3hnar" %% "scala-bcrypt" % "4.3.0",
   "com.softwaremill.macwire" %% "macros" % macwireVersion % "provided",
   "com.softwaremill.macwire" %% "util" % macwireVersion,
