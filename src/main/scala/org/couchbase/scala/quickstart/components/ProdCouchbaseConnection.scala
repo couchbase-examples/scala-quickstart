@@ -1,13 +1,11 @@
 package org.couchbase.scala.quickstart.components
 
-import com.couchbase.client.core.msg.kv.DurabilityLevel
 import com.couchbase.client.scala.manager.bucket.CreateBucketSettings
 import com.couchbase.client.scala.{Bucket, Cluster}
 import org.couchbase.scala.quickstart.config.QuickstartConfig
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
 
 class ProdCouchbaseConnection(quickstartConfig: QuickstartConfig)
     extends CouchbaseConnection[Future] {
@@ -30,11 +28,13 @@ class ProdCouchbaseConnection(quickstartConfig: QuickstartConfig)
 
     for {
       cl <- cluster
+      // Try to get the bucket, and if it fails, create it instead.
       _ <- Future.fromTry(
         cl.buckets
           .getBucket(quickstartConfig.couchbase.bucketName)
           .recoverWith { case _ => cl.buckets.create(bucketSettings) }
       )
+      // Buckets are created async, so we block here instead.
       _ <- Future.fromTry(cl.waitUntilReady(30.seconds))
     } yield cl.bucket(quickstartConfig.couchbase.bucketName)
   }

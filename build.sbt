@@ -16,7 +16,7 @@ val akkaVersion = "2.6.18"
 val akkaHttpVersion = "10.2.7"
 val circeVersion = "0.14.1"
 val http4sVersion = "0.23.7"
-val macwireVersion = "2.5.3"
+//val macwireVersion = "2.5.4"
 val playVersion = "2.8.13"
 val tapirVersion = "0.19.3"
 
@@ -25,8 +25,8 @@ libraryDependencies ++= Seq(
   "com.couchbase.client" %% "scala-client" % "1.2.4",
   "com.github.pureconfig" %% "pureconfig" % "0.17.1",
   "com.github.t3hnar" %% "scala-bcrypt" % "4.3.0",
-  "com.softwaremill.macwire" %% "macros" % macwireVersion % "provided",
-  "com.softwaremill.macwire" %% "util" % macwireVersion,
+//  "com.softwaremill.macwire" %% "macros" % macwireVersion % "provided",
+//  "com.softwaremill.macwire" %% "util" % macwireVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-core" % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirVersion,
@@ -44,8 +44,11 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-server" % playVersion,
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
+  "org.http4s" %% "http4s-blaze-client" % http4sVersion % "test",
   "org.http4s" %% "http4s-blaze-server" % http4sVersion,
+  "org.http4s" %% "http4s-circe" % http4sVersion % "test",
   "org.http4s" %% "http4s-dsl" % http4sVersion,
+  "org.scalatest" %% "scalatest" % "3.2.10" % "test",
 )
 
 // If you're using Scala 2.12: then the following flag is useful for Tapir, to prevent having to annotate type arguments.

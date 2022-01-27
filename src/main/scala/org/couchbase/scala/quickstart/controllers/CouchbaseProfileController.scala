@@ -88,7 +88,7 @@ class CouchbaseProfileController(
     } yield accumulatedProfiles
   }
 
-  def setupIndexes() = {
+  def setupIndexesAndCollections() = {
     for {
       _ <- createPrimaryIndex()
       c = createCollection()
@@ -115,6 +115,7 @@ class CouchbaseProfileController(
         quickstartConfig.couchbase.collectionName,
         bucket.defaultScope.name
       )
+      // Try to create a new collection. This is also counted as successful if the collection already exists.
       collection <- Future.fromTry {
         collectionManager
           .createCollection(collectionSpec)
@@ -127,6 +128,7 @@ class CouchbaseProfileController(
     val query = s"CREATE PRIMARY INDEX default_profile_index ON " +
       s"${quickstartConfig.couchbase.bucketName}._default.${quickstartConfig.couchbase.collectionName}"
 
+    // We can only create an index after the collection has already been successfully created.
     Await.result(createCollectionResult, 5.seconds)
     for {
       cluster <- couchbaseConnection.cluster
@@ -135,5 +137,4 @@ class CouchbaseProfileController(
       })
     } yield cq
   }
-
 }

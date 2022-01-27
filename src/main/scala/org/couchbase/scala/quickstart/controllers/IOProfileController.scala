@@ -6,6 +6,11 @@ import org.couchbase.scala.quickstart.models.{Profile, ProfileInput}
 import java.util.UUID
 import scala.concurrent.Future
 
+/** Takes an existing Future based profile controller and transforms the effect into [cats.effect.IO].
+  *
+  * This is a naive implementation, and just blocks on the Future. We can be more smart by actually trying to
+  * use the streaming API and streaming IO.
+  */
 class IOProfileController(profileController: ProfileController[Future])
     extends ProfileController[IO] {
 
@@ -23,7 +28,9 @@ class IOProfileController(profileController: ProfileController[Future])
   override def profileListing(
       limit: Option[Int],
       skip: Option[Int],
-      search: String,
+      search: String
   ): IO[Either[String, List[Profile]]] =
-    IO.fromFuture(IO.blocking(profileController.profileListing(limit, skip, search)))
+    IO.fromFuture(
+      IO.blocking(profileController.profileListing(limit, skip, search))
+    )
 }

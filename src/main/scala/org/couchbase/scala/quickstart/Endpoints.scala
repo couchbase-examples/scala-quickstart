@@ -2,12 +2,12 @@ package org.couchbase.scala.quickstart
 
 import org.couchbase.scala.quickstart.models.{Profile, ProfileInput}
 import sttp.tapir._
+import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe.jsonBody
 import sttp.tapir.openapi.OpenAPI
-import sttp.tapir.swagger.bundle.SwaggerInterpreter
+import sttp.tapir.openapi.circe.yaml._
 
 import java.util.UUID
-import scala.concurrent.Future
 
 object Endpoints {
   // HealthCheck:
@@ -15,32 +15,31 @@ object Endpoints {
   val healthCheck = endpoint.get
     .in("api" / "v1" / "health")
 
-  val profileBaseEndpoint: Endpoint[Unit, Unit, Unit, Unit, Any] = endpoint
+  // Base end point for Profiles.
+  // /api/v1/profile
+  val profileBaseEndpoint = endpoint
     .in("api" / "v1" / "profile")
 
-  // POST
+  // POST /profile
   val addProfile = profileBaseEndpoint.post
     .in(jsonBody[ProfileInput])
     .errorOut(stringBody)
     .out(jsonBody[Profile])
-//    .out([UUID])
-//    .in(header[String](name = "X-Auth-Token"))
-// fix status code
 
-  // GET/DELETE
+  // GET /profile?id=uuid
   // /{id}
   val getProfile = profileBaseEndpoint.get
     .in(query[UUID]("id"))
     .out(jsonBody[Profile])
     .errorOut(stringBody)
 
+  // DELETE /profile?id=uuid
   val deleteProfile = profileBaseEndpoint.delete
     .in(query[UUID]("id"))
     .out(jsonBody[UUID])
     .errorOut(stringBody)
 
-  // GET
-  // /profiles/
+  // GET /profiles?limit=m&skip=n&search=string
   val profileListing = profileBaseEndpoint.get
     .in("profiles")
     .in(query[Option[Int]]("limit"))
@@ -49,23 +48,12 @@ object Endpoints {
     .out(jsonBody[List[Profile]])
     .errorOut(stringBody)
 
-  // TODO: probably not needed
-  val swaggerFutureEndpoints = SwaggerInterpreter().fromEndpoints[Future](
-    List(addProfile, getProfile, deleteProfile, profileListing),
-    "Couchbase profile API",
-    "1.0"
-  )
-
-  def openapiYamlDocumentation: String = {
-    import sttp.tapir.docs.openapi._
-    import sttp.tapir.openapi.circe.yaml._
-
-    // TODO: verify whether the default options are okay
-    val docs: OpenAPI = OpenAPIDocsInterpreter().toOpenAPI(
+  def openapiYamlDocumentation: String = OpenAPIDocsInterpreter()
+    .toOpenAPI(
       List(addProfile, getProfile, deleteProfile, profileListing),
       "Couchbase profile API",
       "1.0"
     )
-    docs.toYaml
-  }
+    .toYaml
+
 }

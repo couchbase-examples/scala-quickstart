@@ -6,14 +6,6 @@ import sttp.tapir.Schema
 import java.util.UUID
 import scala.util.Try
 
-final case class ProfileInput(
-    firstName: String,
-    lastName: String,
-    email: String,
-    password: String
-)
-
-//TODO: fix password to be a sensible type
 final case class Profile(
     pid: UUID,
     firstName: String,
@@ -21,13 +13,6 @@ final case class Profile(
     email: String,
     saltedPassword: String
 )
-
-object ProfileInput {
-  import io.circe.generic.semiauto._
-  implicit val profileInputDecoder: Decoder[ProfileInput] = deriveDecoder
-  implicit val profileInputEncoder: Encoder[ProfileInput] = deriveEncoder
-  implicit val profileInputSchema: Schema[ProfileInput] = Schema.derived
-}
 
 object Profile {
   import io.circe.generic.semiauto._

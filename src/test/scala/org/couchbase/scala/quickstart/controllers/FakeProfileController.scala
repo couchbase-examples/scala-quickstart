@@ -7,6 +7,8 @@ import java.util.UUID
 import scala.collection.mutable
 import scala.util.{Failure, Success}
 
+/** Fake controller that uses an in memory map to keep track of profiles.
+  */
 object FakeProfileController extends ProfileController[Id] {
 
   val exampleProfile: Profile =
@@ -36,8 +38,8 @@ object FakeProfileController extends ProfileController[Id] {
 
   def deleteProfile(pid: UUID): Either[String, UUID] = {
     profileMap.remove(pid) match {
-      case None          => Left(s"Profile ID: $pid was not found.")
-      case Some(profile) => Right(pid)
+      case None    => Left(s"Profile ID: $pid was not found.")
+      case Some(_) => Right(pid)
     }
   }
 
