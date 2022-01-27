@@ -1,9 +1,10 @@
 package org.couchbase.scala.quickstart.servers
 
-import cats.effect.{FiberIO, IO}
 import cats.effect.unsafe.IORuntime
+import cats.effect.{FiberIO, IO}
 import cats.syntax.semigroupk._
 import org.couchbase.scala.quickstart.Endpoints
+import org.couchbase.scala.quickstart.controllers.ProfileController
 import org.http4s.HttpRoutes
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.Router
@@ -12,7 +13,7 @@ import sttp.tapir.swagger.SwaggerUI
 
 import scala.concurrent.ExecutionContext
 
-object ProfileServerHttp4s {
+class ProfileServerHttp4s(profileController: ProfileController[IO]) {
 
   implicit val ec: ExecutionContext =
     scala.concurrent.ExecutionContext.Implicits.global
@@ -20,16 +21,14 @@ object ProfileServerHttp4s {
 
   val getProfileRoute: HttpRoutes[IO] = {
     Http4sServerInterpreter[IO]().toRoutes(
-      Endpoints.getProfile.serverLogic(pid =>
-        IO.pure(ProfileController.getProfile(pid))
-      )
+      Endpoints.getProfile.serverLogic(pid => profileController.getProfile(pid))
     )
   }
 
   val postProfileRoute: HttpRoutes[IO] = {
     Http4sServerInterpreter[IO]().toRoutes(
       Endpoints.addProfile.serverLogic(profileInput =>
-        IO.pure(ProfileController.postProfile(profileInput))
+        profileController.postProfile(profileInput)
       )
     )
   }
@@ -37,16 +36,16 @@ object ProfileServerHttp4s {
   val deleteProfileRoute: HttpRoutes[IO] = {
     Http4sServerInterpreter[IO]().toRoutes(
       Endpoints.deleteProfile.serverLogic(pid =>
-        IO.pure(ProfileController.deleteProfile(pid))
+        profileController.deleteProfile(pid)
       )
     )
   }
 
   val profileListingRoute: HttpRoutes[IO] = {
     Http4sServerInterpreter[IO]().toRoutes(
-      Endpoints.profileListing.serverLogic(_ =>
-        IO.pure(ProfileController.profileListing())
-      )
+      Endpoints.profileListing.serverLogic { case (limit, skip, search) =>
+        profileController.profileListing(limit, skip, search)
+      }
     )
   }
 

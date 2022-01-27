@@ -7,7 +7,9 @@ final case class CouchbaseConfig(
     host: String,
     username: String,
     password: String,
-    bucketName: String
+    bucketName: String,
+    bucketSize: Int,
+    collectionName: String
 )
 
 object CouchbaseConfig {

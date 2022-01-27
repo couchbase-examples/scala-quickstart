@@ -1,3 +1,4 @@
+ThisBuild / scalacOptions ++= Seq("-deprecation")
 ThisBuild / organization := "org.couchbase"
 ThisBuild / scalaVersion := "2.13.8"
 ThisBuild / version := "0.1.0"
@@ -48,5 +49,5 @@ libraryDependencies ++= Seq(
 )
 
 // If you're using Scala 2.12: then the following flag is useful for Tapir, to prevent having to annotate type arguments.
-//scalacOptions += "-Ypartial-unification"
+//ThisBuild / scalacOptions += "-Ypartial-unification"
 

@@ -1,28 +1,21 @@
 package org.couchbase.scala.quickstart
 
 import org.couchbase.scala.quickstart.models.{Profile, ProfileInput}
+import sttp.tapir._
 import sttp.tapir.json.circe.jsonBody
 import sttp.tapir.openapi.OpenAPI
-import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
-import sttp.tapir._
 
 import java.util.UUID
 import scala.concurrent.Future
 
 object Endpoints {
-
-  // TODO: hardcode capabilities?
-
-  // HealthCheck: /api/v1/health
-
-  // GET
+  // HealthCheck:
+  // GET /api/v1/health
   val healthCheck = endpoint.get
-    .in("health")
+    .in("api" / "v1" / "health")
 
-  //  @RequestMapping("/api/v1/profile"
-
-  val profileBaseEndpoint = endpoint
+  val profileBaseEndpoint: Endpoint[Unit, Unit, Unit, Unit, Any] = endpoint
     .in("api" / "v1" / "profile")
 
   // POST
@@ -43,14 +36,18 @@ object Endpoints {
 
   val deleteProfile = profileBaseEndpoint.delete
     .in(query[UUID]("id"))
-    .out(jsonBody[Profile])
+    .out(jsonBody[UUID])
     .errorOut(stringBody)
 
   // GET
   // /profiles/
   val profileListing = profileBaseEndpoint.get
     .in("profiles")
+    .in(query[Option[Int]]("limit"))
+    .in(query[Option[Int]]("skip"))
+    .in(query[String]("search"))
     .out(jsonBody[List[Profile]])
+    .errorOut(stringBody)
 
   // TODO: probably not needed
   val swaggerFutureEndpoints = SwaggerInterpreter().fromEndpoints[Future](
@@ -58,7 +55,6 @@ object Endpoints {
     "Couchbase profile API",
     "1.0"
   )
-
 
   def openapiYamlDocumentation: String = {
     import sttp.tapir.docs.openapi._
