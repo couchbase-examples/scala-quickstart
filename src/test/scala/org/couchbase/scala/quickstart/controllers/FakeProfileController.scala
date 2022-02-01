@@ -36,6 +36,20 @@ object FakeProfileController extends ProfileController[Id] {
     }
   }
 
+  def putProfile(
+      pid: UUID,
+      profileInput: ProfileInput
+  ): Either[String, Profile] = {
+    Profile.fromProfileInput(profileInput).map(_.copy(pid = pid)) match {
+      case Failure(exception) => Left(exception.toString)
+      case Success(profile: Profile) =>
+        Right {
+          profileMap += (pid -> profile)
+          profile
+        }
+    }
+  }
+
   def deleteProfile(pid: UUID): Either[String, UUID] = {
     profileMap.remove(pid) match {
       case None    => Left(s"Profile ID: $pid was not found.")

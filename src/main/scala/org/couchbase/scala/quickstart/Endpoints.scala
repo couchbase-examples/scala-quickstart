@@ -4,7 +4,6 @@ import org.couchbase.scala.quickstart.models.{Profile, ProfileInput}
 import sttp.tapir._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe.jsonBody
-import sttp.tapir.openapi.OpenAPI
 import sttp.tapir.openapi.circe.yaml._
 
 import java.util.UUID
@@ -20,18 +19,24 @@ object Endpoints {
   val profileBaseEndpoint = endpoint
     .in("api" / "v1" / "profile")
 
-  // POST /profile
-  val addProfile = profileBaseEndpoint.post
-    .in(jsonBody[ProfileInput])
-    .errorOut(stringBody)
-    .out(jsonBody[Profile])
-
   // GET /profile?id=uuid
-  // /{id}
   val getProfile = profileBaseEndpoint.get
     .in(query[UUID]("id"))
     .out(jsonBody[Profile])
     .errorOut(stringBody)
+
+  // POST /profile with JSON Profile body
+  val postProfile = profileBaseEndpoint.post
+    .in(jsonBody[ProfileInput])
+    .errorOut(stringBody)
+    .out(jsonBody[Profile])
+
+  // PUT /profile?id=uuid with JSON Profile body
+  val putProfile = profileBaseEndpoint.put
+    .in(query[UUID]("id"))
+    .in(jsonBody[ProfileInput])
+    .errorOut(stringBody)
+    .out(jsonBody[Profile])
 
   // DELETE /profile?id=uuid
   val deleteProfile = profileBaseEndpoint.delete
@@ -50,7 +55,7 @@ object Endpoints {
 
   def openapiYamlDocumentation: String = OpenAPIDocsInterpreter()
     .toOpenAPI(
-      List(addProfile, getProfile, deleteProfile, profileListing),
+      List(postProfile, getProfile, deleteProfile, profileListing),
       "Couchbase profile API",
       "1.0"
     )

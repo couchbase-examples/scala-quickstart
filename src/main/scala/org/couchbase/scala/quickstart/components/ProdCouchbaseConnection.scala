@@ -6,6 +6,7 @@ import org.couchbase.scala.quickstart.config.QuickstartConfig
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 class ProdCouchbaseConnection(quickstartConfig: QuickstartConfig)
     extends CouchbaseConnection[Future] {
@@ -32,7 +33,7 @@ class ProdCouchbaseConnection(quickstartConfig: QuickstartConfig)
       _ <- Future.fromTry(
         cl.buckets
           .getBucket(quickstartConfig.couchbase.bucketName)
-          .recoverWith { case _ => cl.buckets.create(bucketSettings) }
+          .recoverWith { case NonFatal(_) => cl.buckets.create(bucketSettings) }
       )
       // Buckets are created async, so we block here instead.
       _ <- Future.fromTry(cl.waitUntilReady(30.seconds))

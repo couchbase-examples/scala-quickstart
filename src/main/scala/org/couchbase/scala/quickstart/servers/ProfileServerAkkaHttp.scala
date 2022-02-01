@@ -25,9 +25,16 @@ class ProfileServerAkkaHttp(profileController: ProfileController[Future]) {
 
   val postProfileRoute: Route =
     AkkaHttpServerInterpreter().toRoute(
-      Endpoints.addProfile.serverLogic(profile =>
+      Endpoints.postProfile.serverLogic(profile =>
         profileController.postProfile(profile)
       )
+    )
+
+  val putProfileRoute: Route =
+    AkkaHttpServerInterpreter().toRoute(
+      Endpoints.putProfile.serverLogic { case (pid, profileInput) =>
+        profileController.putProfile(pid, profileInput)
+      }
     )
 
   val deleteProfileRoute: Route =
@@ -51,7 +58,7 @@ class ProfileServerAkkaHttp(profileController: ProfileController[Future]) {
     Http()
       .newServerAt("localhost", 8081)
       .bind(
-        getProfileRoute ~ postProfileRoute ~ profileListingRoute ~ swaggerOpenAPIRoute
+        getProfileRoute ~ postProfileRoute ~ putProfileRoute ~ profileListingRoute ~ swaggerOpenAPIRoute
       )
   }
 

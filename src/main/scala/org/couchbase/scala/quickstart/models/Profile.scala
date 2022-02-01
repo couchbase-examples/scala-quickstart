@@ -37,14 +37,10 @@ object Profile {
   def fromProfileInput(profileInput: ProfileInput): Try[Profile] = {
     import com.github.t3hnar.bcrypt._
     profileInput match {
-      case ProfileInput(firstName, lastName, email, password) => {
+      case ProfileInput(firstName, lastName, email, password) =>
         for {
           salted <- password.bcryptSafeBounded
-          profile <- Try {
-            Profile(UUID.randomUUID(), firstName, lastName, email, salted)
-          }
-        } yield profile
-      }
+        } yield Profile(UUID.randomUUID(), firstName, lastName, email, salted)
     }
   }
 }

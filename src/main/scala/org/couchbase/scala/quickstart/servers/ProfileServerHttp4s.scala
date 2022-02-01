@@ -29,9 +29,17 @@ class ProfileServerHttp4s[F[_]](profileController: ProfileController[F])(
 
   val postProfileRoute: HttpRoutes[F] = {
     Http4sServerInterpreter[F]().toRoutes(
-      Endpoints.addProfile.serverLogic(profileInput =>
+      Endpoints.postProfile.serverLogic(profileInput =>
         profileController.postProfile(profileInput)
       )
+    )
+  }
+
+  val putProfileRoute: HttpRoutes[F] = {
+    Http4sServerInterpreter[F]().toRoutes(
+      Endpoints.putProfile.serverLogic { case (pid, profileInput) =>
+        profileController.putProfile(pid, profileInput)
+      }
     )
   }
 
@@ -58,7 +66,7 @@ class ProfileServerHttp4s[F[_]](profileController: ProfileController[F])(
   }
 
   val routes: HttpRoutes[F] =
-    getProfileRoute <+> postProfileRoute <+> deleteProfileRoute <+> profileListingRoute <+> swaggerRoute
+    getProfileRoute <+> postProfileRoute <+> putProfileRoute <+> deleteProfileRoute <+> profileListingRoute <+> swaggerRoute
 
   def buildServerDefinition(): BlazeServerBuilder[F] = {
     BlazeServerBuilder[F]
