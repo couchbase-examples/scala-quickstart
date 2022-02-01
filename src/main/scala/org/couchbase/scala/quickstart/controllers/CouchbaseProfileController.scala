@@ -14,7 +14,9 @@ import org.couchbase.scala.quickstart.models.{Profile, ProfileInput}
 import java.util.UUID
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
+import org.couchbase.scala.quickstart.models.CirceGetResult._
 
 class CouchbaseProfileController(
     couchbaseConnection: ProdCouchbaseConnection,
@@ -32,9 +34,7 @@ class CouchbaseProfileController(
     for {
       pc <- profileCollection
       res <- pc.get(pid.toString)
-      json = res.contentAs[io.circe.Json].toEither.left.map(_.toString)
-      profile = json.flatMap(_.as[Profile].left.map(_.getMessage()))
-    } yield profile
+    } yield res.contentAsCirceJson[Profile]
   }
 
   override def postProfile(
@@ -51,11 +51,29 @@ class CouchbaseProfileController(
     } yield profile
   }
 
+  override def putProfile(
+      pid: UUID,
+      profileInput: ProfileInput
+  ): Future[Either[String, Profile]] = {
+    import io.circe.syntax._
+    for {
+      pc <- profileCollection
+      profile <- Profile
+        .fromProfileInput(profileInput)
+        // Replace the newly generated PID with the old PID:
+        .map(_.copy(pid = pid)) match {
+        case Failure(exception) => Future.successful(Left(exception.toString))
+        case Success(p) =>
+          pc.upsert[io.circe.Json](pid.toString, p.asJson) map (_ => Right(p))
+      }
+    } yield profile
+  }
+
   override def deleteProfile(pid: UUID): Future[Either[String, UUID]] = {
     for {
       pc <- profileCollection
       removeResult <- pc.remove(pid.toString).map(_ => Right(pid)).recover {
-        case t => Left(t.getMessage)
+        case NonFatal(t) => Left(t.getMessage)
       }
     } yield removeResult
   }
@@ -83,7 +101,10 @@ class CouchbaseProfileController(
         )
       )
       profiles <- Future.fromTry(
-        rows.rowsAs[io.circe.Json].map(_.map(json => json.as[Profile].left.map(_.getMessage()))))
+        rows
+          .rowsAs[io.circe.Json]
+          .map(_.map(json => json.as[Profile].left.map(_.getMessage())))
+      )
       accumulatedProfiles = profiles.toList.sequence
     } yield accumulatedProfiles
   }

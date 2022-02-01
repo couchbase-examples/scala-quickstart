@@ -22,9 +22,17 @@ class ProfileServerPlay(profileController: ProfileController[Future]) {
 
   val postProfileRoute: Routes = {
     PlayServerInterpreter().toRoutes(
-      Endpoints.addProfile.serverLogic(profileInput =>
+      Endpoints.postProfile.serverLogic(profileInput =>
         profileController.postProfile(profileInput)
       )
+    )
+  }
+
+  val putProfileRoute: Routes = {
+    PlayServerInterpreter().toRoutes(
+      Endpoints.putProfile.serverLogic { case (pid, profileInput) =>
+        profileController.putProfile(pid, profileInput)
+      }
     )
   }
 
@@ -51,7 +59,7 @@ class ProfileServerPlay(profileController: ProfileController[Future]) {
   }
 
   val routes: Routes =
-    getProfileRoute orElse postProfileRoute orElse deleteProfileRoute orElse profileListingRoute orElse swaggerRoute
+    getProfileRoute orElse postProfileRoute orElse putProfileRoute orElse deleteProfileRoute orElse profileListingRoute orElse swaggerRoute
 
   def startServer(): Server = {
     val playConfig = ServerConfig(port =

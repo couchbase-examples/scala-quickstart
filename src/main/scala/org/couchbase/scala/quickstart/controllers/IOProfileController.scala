@@ -25,6 +25,12 @@ class IOProfileController(profileController: ProfileController[Future])
   override def deleteProfile(pid: UUID): IO[Either[String, UUID]] =
     IO.fromFuture(IO.blocking(profileController.deleteProfile(pid)))
 
+  override def putProfile(
+      pid: UUID,
+      profileInput: ProfileInput
+  ): IO[Either[String, Profile]] =
+    IO.fromFuture(IO.blocking(profileController.putProfile(pid, profileInput)))
+
   override def profileListing(
       limit: Option[Int],
       skip: Option[Int],
