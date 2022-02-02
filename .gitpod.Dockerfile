@@ -6,7 +6,7 @@ RUN echo "* soft nproc 20000\n"\
 "* hard nofile 200000\n" >> /etc/security/limits.conf
 
 RUN apt-get -qq update && \
-    apt-get install -yq default-jdk sudo
+    apt-get install -yq default-jdk git sudo
 
 COPY startcb.sh /opt/couchbase/bin/startcb.sh
 

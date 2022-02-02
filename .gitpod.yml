@@ -9,6 +9,8 @@ tasks:
   - name: Start app
     init: sbt compile
     command: gp sync-await startcb && sbt run
+  - name: Load Swagger page for Akka HTTP
+    command: sleep 10 && gp preview $(gp url 8081)/docs
 
 ports:
   # Akka HTTP

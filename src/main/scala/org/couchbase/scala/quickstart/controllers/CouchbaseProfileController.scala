@@ -112,8 +112,10 @@ class CouchbaseProfileController(
   def setupIndexesAndCollections() = {
     for {
       _ <- createPrimaryIndex()
-      c = createCollection()
-      qr <- createCollectionIndexes(c)
+      _ <- createCollection()
+      // Wait until the collection is actually created.
+      _ <- Future { Thread.sleep(5000L)}
+      qr <- createCollectionIndexes()
     } yield qr
   }
 
@@ -145,12 +147,11 @@ class CouchbaseProfileController(
     } yield collection
   }
 
-  def createCollectionIndexes(createCollectionResult: Future[Unit]) = {
+  def createCollectionIndexes() = {
     val query = s"CREATE PRIMARY INDEX default_profile_index ON " +
       s"${quickstartConfig.couchbase.bucketName}._default.${quickstartConfig.couchbase.collectionName}"
 
     // We can only create an index after the collection has already been successfully created.
-    Await.result(createCollectionResult, 5.seconds)
     for {
       cluster <- couchbaseConnection.cluster
       cq <- Future.fromTry(cluster.query(query).recoverWith {

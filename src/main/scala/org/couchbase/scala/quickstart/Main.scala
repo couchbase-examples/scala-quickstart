@@ -41,7 +41,8 @@ object Main {
 
 
     // Set up the indexes and collections. This can take a bit.
-    Await.result(profileController.setupIndexesAndCollections(), 10.seconds)
+    Await.result(couchbaseConnection.bucket, 30.seconds)
+    Await.result(profileController.setupIndexesAndCollections(), 30.seconds)
 
     // Start servers!
     // Note that we only start a server when there is accompanying config in application.conf.
