@@ -1,0 +1,34 @@
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - name: Start Couchbase
+    command:  ./startcb.sh && gp sync-done startcb
+  - name: Log use
+    command: curl -s 'https://da-demo-images.s3.amazonaws.com/runItNow_outline.png?couchbase-example=scala-quickstart-repo&source=gitpod' > /dev/null
+  - name: Start app
+    init: sbt compile
+    command: gp sync-await startcb && sbt run
+
+ports:
+  # Akka HTTP
+  - port: 8081
+    onOpen: open-preview
+  # http4s
+  - port: 8082
+    onOpen: open-preview
+  # Play
+  - port: 8083
+    onOpen: open-preview
+  # Couchbase administrator
+  - port: 8091
+    onOpen: open-browser
+  - port: 8092-10000
+    onOpen: ignore
+  - port: 4369
+    onOpen: ignore
+
+vscode:
+  extensions:
+    - scala-lang.scala
+    - scalameta.metals
