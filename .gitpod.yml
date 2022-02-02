@@ -13,13 +13,13 @@ tasks:
 ports:
   # Akka HTTP
   - port: 8081
-    onOpen: open-preview
+    onOpen: ignore
   # http4s
   - port: 8082
-    onOpen: open-preview
+    onOpen: ignore
   # Play
   - port: 8083
-    onOpen: open-preview
+    onOpen: ignore
   # Couchbase administrator
   - port: 8091
     onOpen: open-browser
@@ -31,4 +31,4 @@ ports:
 vscode:
   extensions:
     - scala-lang.scala
-    - scalameta.metals
+#    - scalameta.metals
