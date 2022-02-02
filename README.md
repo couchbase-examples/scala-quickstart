@@ -30,9 +30,9 @@ The application will keep running until you provide a line of input, after which
 
 You can launch your browser and go to each web server's Swagger start page: 
 
-* [Akka HTTP server](http://localhost:8081/docs)
-* [htt4ps server](http://localhost:8082/docs)
-* [Play server](http://localhost:8083/docs)
+* <a target="_blank" rel="noopener noreferrer" href="http://localhost:8081/docs">Akka HTTP server</a>
+* <a target="_blank" rel="noopener noreferrer" href="http://localhost:8082/docs">htt4ps server</a>
+* <a target="_blank" rel="noopener noreferrer" href="http://localhost:8083/docs">Play server</a>
 
 ## Running The Tests
 
