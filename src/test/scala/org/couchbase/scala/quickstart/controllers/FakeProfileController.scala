@@ -18,14 +18,16 @@ object FakeProfileController extends ProfileController[Id] {
     exampleProfile.pid -> exampleProfile
   )
 
-  def getProfile(pid: UUID): Either[String, Profile] = {
+  override def getProfile(pid: UUID): Either[String, Profile] = {
     profileMap.get(pid) match {
       case None    => Left(s"Missing profile ID: $pid")
       case Some(s) => Right(s)
     }
   }
 
-  def postProfile(profileInput: ProfileInput): Either[String, Profile] = {
+  override def postProfile(
+      profileInput: ProfileInput
+  ): Either[String, Profile] = {
     Profile.fromProfileInput(profileInput) match {
       case Failure(exception) => Left(exception.toString)
       case Success(profile: Profile) =>
@@ -36,7 +38,7 @@ object FakeProfileController extends ProfileController[Id] {
     }
   }
 
-  def putProfile(
+  override def putProfile(
       pid: UUID,
       profileInput: ProfileInput
   ): Either[String, Profile] = {
@@ -50,20 +52,23 @@ object FakeProfileController extends ProfileController[Id] {
     }
   }
 
-  def deleteProfile(pid: UUID): Either[String, UUID] = {
+  override def deleteProfile(pid: UUID): Either[String, UUID] = {
     profileMap.remove(pid) match {
       case None    => Left(s"Profile ID: $pid was not found.")
       case Some(_) => Right(pid)
     }
   }
 
-  def profileListing(
+  override def profileListing(
       limit: Option[Int],
       skip: Option[Int],
       search: String
   ): Either[String, List[Profile]] = {
     Right(
       profileMap.values.toList
+        .filter(p =>
+          (p.firstName.toLowerCase contains search.toLowerCase) || (p.lastName.toLowerCase contains search.toLowerCase)
+        )
         .slice(skip.getOrElse(0), skip.getOrElse(0) + limit.getOrElse(5))
     )
   }

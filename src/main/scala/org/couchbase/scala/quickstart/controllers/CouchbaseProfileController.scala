@@ -1,9 +1,6 @@
 package org.couchbase.scala.quickstart.controllers
 
-import com.couchbase.client.core.error.{
-  CollectionExistsException,
-  IndexExistsException
-}
+import com.couchbase.client.core.error.{CollectionExistsException, DocumentNotFoundException, IndexExistsException}
 import com.couchbase.client.scala.AsyncCollection
 import com.couchbase.client.scala.manager.collection.CollectionSpec
 import com.couchbase.client.scala.query.{QueryOptions, QueryScanConsistency}
@@ -33,8 +30,9 @@ class CouchbaseProfileController(
   override def getProfile(pid: UUID): Future[Either[String, Profile]] = {
     for {
       pc <- profileCollection
-      res <- pc.get(pid.toString)
-    } yield res.contentAsCirceJson[Profile]
+      res <- pc.get(pid.toString).map(_.contentAsCirceJson[Profile]).
+        recover { case _: DocumentNotFoundException => Left(s"Could not retrieve Profile. ID: $pid was not found.")}
+    } yield res
   }
 
   override def postProfile(
@@ -114,7 +112,7 @@ class CouchbaseProfileController(
       _ <- createPrimaryIndex()
       _ <- createCollection()
       // Wait until the collection is actually created.
-      _ <- Future { Thread.sleep(5000L)}
+      _ <- Future { Thread.sleep(5000L) }
       qr <- createCollectionIndexes()
     } yield qr
   }

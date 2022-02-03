@@ -2,45 +2,81 @@ package org.couchbase.scala.quickstart.servers
 
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
+import com.couchbase.client.scala.Bucket
+import com.couchbase.client.scala.manager.collection.CollectionSpec
 import io.circe.Json
+import org.couchbase.scala.quickstart.components.ProdCouchbaseConnection
+import org.couchbase.scala.quickstart.config.QuickstartConfig
 import org.couchbase.scala.quickstart.controllers.{
-  FakeProfileController,
-  FakeProfileControllerIO
+  CouchbaseProfileController,
+  IOProfileController
 }
 import org.couchbase.scala.quickstart.models.{Profile, ProfileInput}
 import org.http4s.circe.CirceEntityCodec._
 import org.http4s.circe._
 import org.http4s.client.Client
-import org.http4s.implicits._
+import org.http4s.implicits.http4sLiteralsSyntax
 import org.http4s.{HttpApp, Method, Request, Status}
+import org.scalatest.BeforeAndAfter
 import org.scalatest.flatspec.AnyFlatSpec
+import pureconfig.ConfigSource
 
 import java.util.UUID
-import scala.collection.mutable
+import scala.concurrent.Await
+import scala.concurrent.duration.DurationInt
 
-class ProfileServerHttp4sTest extends AnyFlatSpec {
+class ProfileServerHttp4sIntegrationTest
+    extends AnyFlatSpec
+    with BeforeAndAfter {
 
   implicit val runtime: IORuntime = cats.effect.unsafe.IORuntime.global
+  lazy val quickstartConfig: QuickstartConfig =
+    ConfigSource.default.load[QuickstartConfig] match {
+      case Left(err) =>
+        throw new Exception(
+          s"Unable to load system configuration. Please check application.conf. Error: $err"
+        )
+      case Right(config) => config
+    }
 
-  val fakeHttp4sServer: ProfileServerHttp4s[IO] = new ProfileServerHttp4s[IO](
-    new FakeProfileControllerIO(FakeProfileController)
+  // Set up connection to Couchbase. Note that this assumes Couchbase is already running locally!
+  lazy val couchbaseConnection = new ProdCouchbaseConnection(quickstartConfig)
+
+  lazy val profileController =
+    new CouchbaseProfileController(couchbaseConnection, quickstartConfig)
+
+  // Set up the indexes and collections. This can take a bit.
+  val bucket: Bucket = Await.result(couchbaseConnection.bucket, 30.seconds)
+  Await.result(profileController.setupIndexesAndCollections(), 30.seconds)
+
+  val http4sServer = new ProfileServerHttp4s(
+    new IOProfileController(profileController)
   )
 
-  val http4sApp: HttpApp[IO] = fakeHttp4sServer.routes.orNotFound
+  val http4sApp: HttpApp[IO] = http4sServer.routes.orNotFound
   val client: Client[IO] = Client.fromHttpApp(http4sApp)
+  val collectionSpec: CollectionSpec = CollectionSpec(
+    quickstartConfig.couchbase.collectionName,
+    bucket.defaultScope.name
+  )
+
+  before {
+    Await.result(profileController.setupIndexesAndCollections(), 30.seconds)
+  }
+
+  after {
+    bucket.collections.dropCollection(collectionSpec)
+  }
 
   "Getting a valid profile pid" should "successfully return a profile" in {
-    val profile = FakeProfileController
-    .postProfile(
-        ProfileInput(
-          "Jane",
-          "Doe",
-          "janedoe@example.com",
-          "plaintextisbesttext"
-        )
-      )
-      .toOption
-      .get
+    val profileInput =
+      ProfileInput("Jane", "Doe", "janedoe@example.com", "plaintextisbesttext")
+    val postRequest: Request[IO] = Request(
+      method = Method.POST,
+      uri = uri"/api/v1/profile"
+    ).withEntity(profileInput)
+    val postResponse = client.expect[Json](postRequest)
+    val profile = postResponse.unsafeRunSync().as[Profile].toOption.get
     val request: Request[IO] = Request(
       method = Method.GET,
       uri = uri"/api/v1/profile/".withQueryParam("id", profile.pid.toString)
@@ -167,23 +203,28 @@ class ProfileServerHttp4sTest extends AnyFlatSpec {
   }
 
   "Getting a list of profiles" should "with limit and skip parameters should succeed" in {
-    // Set up list of profiles directly in the profile controller.
-    val exampleProfilesA: List[Profile] = List(
-      Profile("AAA1", "AAA1", "email@domain.com", "password123").get,
-      Profile("AAA2", "AAA2", "email@domain.com", "password123").get,
-      Profile("AAA3", "AAA3", "email@domain.com", "password123").get,
-      Profile("AAA4", "AAA4", "email@domain.com", "password123").get,
-      Profile("AAA5", "AAA5", "email@domain.com", "password123").get,
-      Profile("AAA6", "AAA6", "email@domain.com", "password123").get
+    // Set up list of profile inputs to POST one by one.
+    val exampleProfilesA: List[ProfileInput] = List(
+      ProfileInput("AAA1", "AAA1", "email@domain.com", "password123"),
+      ProfileInput("AAA2", "AAA2", "email@domain.com", "password123"),
+      ProfileInput("AAA3", "AAA3", "email@domain.com", "password123"),
+      ProfileInput("AAA4", "AAA4", "email@domain.com", "password123"),
+      ProfileInput("AAA5", "AAA5", "email@domain.com", "password123"),
+      ProfileInput("AAA6", "AAA6", "email@domain.com", "password123")
     )
-    val exampleProfilesB: List[Profile] = List(
-      Profile("BBB1", "BBB1", "email@domain.com", "password123").get,
-      Profile("BBB2", "BBB2", "email@domain.com", "password123").get,
-      Profile("BBB3", "BBB3", "email@domain.com", "password123").get
+    val exampleProfilesB: List[ProfileInput] = List(
+      ProfileInput("BBB1", "BBB1", "email@domain.com", "password123"),
+      ProfileInput("BBB2", "BBB2", "email@domain.com", "password123"),
+      ProfileInput("BBB3", "BBB3", "email@domain.com", "password123")
     )
-    FakeProfileController.profileMap = mutable.HashMap.from(
-      (exampleProfilesA ++ exampleProfilesB).map(p => p.pid -> p)
-    )
+    // POST all profiles
+    exampleProfilesA ++ exampleProfilesB foreach { profileInput =>
+      val postRequest: Request[IO] = Request(
+        method = Method.POST,
+        uri = uri"/api/v1/profile"
+      ).withEntity(profileInput)
+      client.expect[Json](postRequest).unsafeRunSync()
+    }
     val skip = 1
     val limit = 2
     val request: Request[IO] = Request(
@@ -198,28 +239,33 @@ class ProfileServerHttp4sTest extends AnyFlatSpec {
     val profiles = response.unsafeRunSync().as[List[Profile]].toOption.get
 
     assert(profiles.length === limit)
-    assert(exampleProfilesA contains profiles.head)
-    assert(exampleProfilesA contains profiles(1))
+    assert(exampleProfilesA.map(_.firstName) contains profiles.head.firstName)
+    assert(exampleProfilesA.map(_.firstName) contains profiles(1).firstName)
   }
 
   it should "succeed with no limit and skip parameters" in {
-    // Set up list of profiles directly in the profile controller.
-    val exampleProfilesA: List[Profile] = List(
-      Profile("AAA1", "AAA1", "email@domain.com", "password123").get,
-      Profile("AAA2", "AAA2", "email@domain.com", "password123").get,
-      Profile("AAA3", "AAA3", "email@domain.com", "password123").get,
-      Profile("AAA4", "AAA4", "email@domain.com", "password123").get,
-      Profile("AAA5", "AAA5", "email@domain.com", "password123").get,
-      Profile("AAA5", "AAA6", "email@domain.com", "password123").get
+    // Set up list of profile inputs to POST one by one.
+    val exampleProfilesA: List[ProfileInput] = List(
+      ProfileInput("AAA1", "AAA1", "email@domain.com", "password123"),
+      ProfileInput("AAA2", "AAA2", "email@domain.com", "password123"),
+      ProfileInput("AAA3", "AAA3", "email@domain.com", "password123"),
+      ProfileInput("AAA4", "AAA4", "email@domain.com", "password123"),
+      ProfileInput("AAA5", "AAA5", "email@domain.com", "password123"),
+      ProfileInput("AAA6", "AAA6", "email@domain.com", "password123")
     )
-    val exampleProfilesB: List[Profile] = List(
-      Profile("BBB1", "BBB1", "email@domain.com", "password123").get,
-      Profile("BBB2", "BBB2", "email@domain.com", "password123").get,
-      Profile("BBB3", "BBB3", "email@domain.com", "password123").get
+    val exampleProfilesB: List[ProfileInput] = List(
+      ProfileInput("BBB1", "BBB1", "email@domain.com", "password123"),
+      ProfileInput("BBB2", "BBB2", "email@domain.com", "password123"),
+      ProfileInput("BBB3", "BBB3", "email@domain.com", "password123")
     )
-    FakeProfileController.profileMap = mutable.HashMap.from(
-      (exampleProfilesA ++ exampleProfilesB).map(p => p.pid -> p)
-    )
+    // POST all profiles
+    exampleProfilesA ++ exampleProfilesB foreach { profileInput =>
+      val postRequest: Request[IO] = Request(
+        method = Method.POST,
+        uri = uri"/api/v1/profile"
+      ).withEntity(profileInput)
+      client.expect[Json](postRequest).unsafeRunSync()
+    }
     val request: Request[IO] = Request(
       method = Method.GET,
       uri = uri"/api/v1/profile/profiles"
@@ -230,17 +276,15 @@ class ProfileServerHttp4sTest extends AnyFlatSpec {
     val profiles = response.unsafeRunSync().as[List[Profile]].toOption.get
 
     assert(profiles.length === 5) // limit default is 5
-    assert(exampleProfilesA contains profiles.head)
-    assert(exampleProfilesA contains profiles(1))
-    assert(exampleProfilesA contains profiles(2))
-    assert(exampleProfilesA contains profiles(3))
-    assert(exampleProfilesA contains profiles(4))
+    assert(exampleProfilesA.map(_.firstName) contains profiles.head.firstName)
+    assert(exampleProfilesA.map(_.firstName) contains profiles(1).firstName)
+    assert(exampleProfilesA.map(_.firstName) contains profiles(2).firstName)
+    assert(exampleProfilesA.map(_.firstName) contains profiles(3).firstName)
+    assert(exampleProfilesA.map(_.firstName) contains profiles(4).firstName)
   }
 
   "Accessing the Swagger documentation at /docs" should "get redirected" in {
-    val request: Request[IO] = Request(
-      method = Method.GET,
-      uri = uri"/docs")
+    val request: Request[IO] = Request(method = Method.GET, uri = uri"/docs")
 
     val responseStatus: Status =
       client.status(request).unsafeRunSync()

@@ -20,7 +20,7 @@ class FakeProfileControllerIO(profileController: ProfileController[Id])
       pid: UUID,
       profileInput: ProfileInput
   ): IO[Either[String, Profile]] =
-    IO.pure(profileController.putProfile((pid, profileInput)))
+    IO.pure(profileController.putProfile(pid, profileInput))
 
   override def deleteProfile(pid: UUID): IO[Either[String, UUID]] =
     IO.pure(profileController.deleteProfile(pid))
