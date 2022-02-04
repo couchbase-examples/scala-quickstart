@@ -3,6 +3,11 @@ ThisBuild / organization := "org.couchbase"
 ThisBuild / scalaVersion := "2.13.8"
 ThisBuild / version := "0.1.0"
 
+// GitHub Action related settings
+// To stop generating the GitHub publish action:
+//ThisBuild / githubWorkflowPublishTargetBranches := Seq()
+
+
 //wartremoverErrors ++= Warts.unsafe
 //wartremoverErrors ++= Warts.all
 
