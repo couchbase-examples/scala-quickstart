@@ -69,7 +69,7 @@ object Main {
         println(s"http4s server running, see http://localhost:${http4sConfig.port}/docs")
         Some(fiber)
       case None =>
-        println("htt4s config not found. Server will not be started")
+        println("htt4ps config not found. Server will not be started")
         None
     }
 
@@ -80,7 +80,7 @@ object Main {
         println(s"Play server running, see http://localhost:${playConfig.port}/docs")
         Some(server)
       case None =>
-        println("htt4s config not found. Server will not be started")
+        println("Play config not found. Server will not be started")
         None
     }
 

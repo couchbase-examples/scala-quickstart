@@ -6,14 +6,13 @@ import com.couchbase.client.scala.manager.collection.CollectionSpec
 import com.couchbase.client.scala.query.{QueryOptions, QueryScanConsistency}
 import org.couchbase.scala.quickstart.components.ProdCouchbaseConnection
 import org.couchbase.scala.quickstart.config.QuickstartConfig
+import org.couchbase.scala.quickstart.models.CirceGetResult._
 import org.couchbase.scala.quickstart.models.{Profile, ProfileInput}
 
 import java.util.UUID
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
-import org.couchbase.scala.quickstart.models.CirceGetResult._
 
 class CouchbaseProfileController(
     couchbaseConnection: ProdCouchbaseConnection,
@@ -149,7 +148,6 @@ class CouchbaseProfileController(
     val query = s"CREATE PRIMARY INDEX default_profile_index ON " +
       s"${quickstartConfig.couchbase.bucketName}._default.${quickstartConfig.couchbase.collectionName}"
 
-    // We can only create an index after the collection has already been successfully created.
     for {
       cluster <- couchbaseConnection.cluster
       cq <- Future.fromTry(cluster.query(query).recoverWith {
