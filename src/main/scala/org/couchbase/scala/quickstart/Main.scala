@@ -69,7 +69,7 @@ object Main {
         println(s"http4s server running, see http://localhost:${http4sConfig.port}/docs")
         Some(fiber)
       case None =>
-        println("htt4ps config not found. Server will not be started")
+        println("http4s config not found. Server will not be started")
         None
     }
 

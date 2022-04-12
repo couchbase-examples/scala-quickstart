@@ -26,7 +26,7 @@ class ProdCouchbaseConnection(quickstartConfig: QuickstartConfig)
         quickstartConfig.couchbase.username,
         quickstartConfig.couchbase.password
       )
-    else {
+    else
       for {
         clusterEnv <- ClusterEnvironment.builder
           .securityConfig(
@@ -45,7 +45,6 @@ class ProdCouchbaseConnection(quickstartConfig: QuickstartConfig)
         )
         cl <- Cluster.connect(quickstartConfig.couchbase.host, clusterOptions)
       } yield cl
-    }
   )
 
   override lazy val bucket: Future[Bucket] = {
