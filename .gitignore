@@ -47,3 +47,6 @@ target/surefire-reports/
 
 # tags
 tags
+
+# sdk doctor binary
+sdk-doctor

@@ -9,7 +9,9 @@ final case class CouchbaseConfig(
     password: String,
     bucketName: String,
     bucketSize: Int,
-    collectionName: String
+    collectionName: String,
+    // When true, connect to Couchbase Capella (Cloud).
+    capella: Boolean
 )
 
 object CouchbaseConfig {
