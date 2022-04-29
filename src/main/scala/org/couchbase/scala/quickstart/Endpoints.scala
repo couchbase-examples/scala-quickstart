@@ -9,11 +9,6 @@ import sttp.tapir.openapi.circe.yaml._
 import java.util.UUID
 
 object Endpoints {
-  // HealthCheck:
-  // GET /api/v1/health
-  val healthCheck = endpoint.get
-    .in("api" / "v1" / "health")
-
   // Base end point for Profiles.
   // /api/v1/profile
   val profileBaseEndpoint = endpoint
