@@ -53,9 +53,7 @@ class ProfileServerPlay(profileController: ProfileController[Future]) {
   }
 
   val swaggerRoute: Routes = {
-    PlayServerInterpreter().toRoutes(
-      SwaggerUI[Future](Endpoints.openapiYamlDocumentation)
-    )
+    PlayServerInterpreter().toRoutes(Endpoints.swaggerEndpoints)
   }
 
   val routes: Routes =

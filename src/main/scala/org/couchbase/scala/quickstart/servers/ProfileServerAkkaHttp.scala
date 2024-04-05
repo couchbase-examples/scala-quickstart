@@ -50,9 +50,7 @@ class ProfileServerAkkaHttp(profileController: ProfileController[Future]) {
         profileController.profileListing(limit, skip, search)
     })
 
-  val swaggerOpenAPIRoute: Route = AkkaHttpServerInterpreter().toRoute(
-    SwaggerUI[Future](Endpoints.openapiYamlDocumentation)
-  )
+  val swaggerOpenAPIRoute: Route = AkkaHttpFutureServerInterpreter().toRoute(Endpoints.swaggerEndpoints)
 
   def startAkkaHttpServer(): Future[ServerBinding] = {
     Http()

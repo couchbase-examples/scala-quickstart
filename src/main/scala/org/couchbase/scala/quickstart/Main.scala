@@ -14,9 +14,6 @@ import scala.io.StdIn
 
 object Main {
   def main(args: Array[String]): Unit = {
-    // This code has deliberately not been refactored to use dependency injection, to make the flow more explicit.
-    // Feel free to use your favourite dependency injection framework (I recommend MacWire) to refactor this code.
-
     // Read configuration needed for Couchbase and the three web servers (Akka HTTP, http4s, Play).
     lazy val quickstartConfig: QuickstartConfig =
       ConfigSource.default.load[QuickstartConfig] match {

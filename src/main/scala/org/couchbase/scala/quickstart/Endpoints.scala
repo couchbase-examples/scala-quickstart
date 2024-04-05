@@ -7,11 +7,12 @@ import sttp.tapir.json.circe.jsonBody
 import sttp.tapir.openapi.circe.yaml._
 
 import java.util.UUID
+import java.util.concurrent.Future
 
 object Endpoints {
   // Base end point for Profiles.
   // /api/v1/profile
-  val profileBaseEndpoint = endpoint
+  val profileBaseEndpoint = endpont
     .in("api" / "v1" / "profile")
 
   // GET /profile?id=uuid
@@ -48,12 +49,12 @@ object Endpoints {
     .out(jsonBody[List[Profile]])
     .errorOut(stringBody)
 
-  def openapiYamlDocumentation: String = OpenAPIDocsInterpreter()
-    .toOpenAPI(
-      List(postProfile, getProfile, deleteProfile, profileListing),
-      "Couchbase profile API",
+  def endpoints = List(postProfile, getProfile, deleteProfile, profileListing)
+  def swaggerEndpoints = SwaggerInterpreter()
+    .fromEndpoints[Future](
+      endpoints,
+      "Couchbae profile API",
       "1.0"
     )
-    .toYaml
 
 }

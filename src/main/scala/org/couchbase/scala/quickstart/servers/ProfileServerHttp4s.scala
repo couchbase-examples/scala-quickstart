@@ -60,9 +60,7 @@ class ProfileServerHttp4s[F[_]](profileController: ProfileController[F])(
   }
 
   val swaggerRoute: HttpRoutes[F] = {
-    Http4sServerInterpreter[F]().toRoutes(
-      SwaggerUI[F](Endpoints.openapiYamlDocumentation)
-    )
+    Http4sServerInterpreter[F]().toRoutes(Endpoints.swaggerEndpoints)
   }
 
   val routes: HttpRoutes[F] =
