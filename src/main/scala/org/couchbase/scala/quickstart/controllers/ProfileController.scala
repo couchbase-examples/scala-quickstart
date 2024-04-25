@@ -1,6 +1,6 @@
 package org.couchbase.scala.quickstart.controllers
 
-import org.couchbase.scala.quickstart.models.{Profile, ProfileInput}
+import org.couchbase.scala.quickstart.models.{Profile, ProfileInput, ProfileListingInput, PutProfileInput}
 
 import java.util.UUID
 
@@ -10,10 +10,10 @@ trait ProfileController[F[_]] {
 
   def postProfile(profileInput: ProfileInput): F[Either[String, Profile]]
 
-  def putProfile(pid: UUID, profileInput: ProfileInput): F[Either[String, Profile]]
+  def putProfile(args: PutProfileInput): F[Either[String, Profile]]
 
   def deleteProfile(pid: UUID): F[Either[String, UUID]]
 
-  def profileListing(limit: Option[Int], skip: Option[Int], search: String): F[Either[String, List[Profile]]]
+  def profileListing(args: ProfileListingInput): F[Either[String, List[Profile]]]
 
 }

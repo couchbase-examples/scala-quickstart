@@ -18,42 +18,19 @@ lazy val root = project
     name := "Couchbase Scala Quickstart"
   )
 
-val akkaVersion = "2.8.5"
-val akkaHttpVersion = "10.5.3"
 val circeVersion = "0.14.1"
-val http4sVersion = "0.23.16"
-//val macwireVersion = "2.5.4"
-val playVersion = "2.9.2"
-val tapirVersion = "1.10.3"
+val tapirVersion = "1.10.5"
 
 libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.5.3",
-  "com.couchbase.client" %% "scala-client" % "1.2.6",
+  "com.couchbase.client" %% "scala-client" % "1.6.0",
   "com.github.pureconfig" %% "pureconfig" % "0.17.6",
   "com.github.t3hnar" %% "scala-bcrypt" % "4.3.0",
-//  "com.softwaremill.macwire" %% "macros" % macwireVersion % "provided",
-//  "com.softwaremill.macwire" %% "util" % macwireVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-akka-http-server" % tapirVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-core" % tapirVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-http4s-server" % tapirVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % tapirVersion,
-  "com.softwaremill.sttp.tapir" %% "tapir-play-server" % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
-  "org.typelevel" %% "cats-core" % "2.10.0",
-  "org.typelevel" %% "cats-effect" % "3.5.4",
-  "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
-  "com.typesafe.akka" %% "akka-serialization-jackson" % akkaVersion,
-  "com.typesafe.akka" %% "akka-stream" % akkaVersion,
-  "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-  "com.typesafe.play" %% "play-netty-server" % playVersion,
-  "com.typesafe.play" %% "play-server" % playVersion,
+  "com.softwaremill.sttp.tapir" %% "tapir-netty-server" % tapirVersion,
+  "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion,
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
-  "org.http4s" %% "http4s-blaze-client" % http4sVersion % "test",
-  "org.http4s" %% "http4s-blaze-server" % http4sVersion,
-  "org.http4s" %% "http4s-circe" % http4sVersion % "test",
-  "org.http4s" %% "http4s-dsl" % http4sVersion,
   "org.scalatest" %% "scalatest" % "3.2.18" % "test",
 )
 

@@ -4,10 +4,14 @@ import com.couchbase.client.core.error.{CollectionExistsException, DocumentNotFo
 import com.couchbase.client.scala.AsyncCollection
 import com.couchbase.client.scala.manager.collection.CollectionSpec
 import com.couchbase.client.scala.query.{QueryOptions, QueryScanConsistency}
+import org.couchbase.scala.quickstart.Endpoints
 import org.couchbase.scala.quickstart.components.ProdCouchbaseConnection
 import org.couchbase.scala.quickstart.config.QuickstartConfig
 import org.couchbase.scala.quickstart.models.CirceGetResult._
-import org.couchbase.scala.quickstart.models.{Profile, ProfileInput}
+import org.couchbase.scala.quickstart.models.{Profile, ProfileInput, ProfileListingInput, PutProfileInput}
+import sttp.tapir.endpoint
+import sttp.tapir.server.ServerEndpoint
+import sttp.tapir.server.netty.NettyFutureServer
 
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,7 +20,7 @@ import scala.util.{Failure, Success}
 
 class CouchbaseProfileController(
     couchbaseConnection: ProdCouchbaseConnection,
-    quickstartConfig: QuickstartConfig
+    quickstartConfig: QuickstartConfig,
 ) extends ProfileController[Future] {
   implicit val ec: ExecutionContext =
     scala.concurrent.ExecutionContext.Implicits.global
@@ -49,19 +53,18 @@ class CouchbaseProfileController(
   }
 
   override def putProfile(
-      pid: UUID,
-      profileInput: ProfileInput
+                         args: PutProfileInput
   ): Future[Either[String, Profile]] = {
     import io.circe.syntax._
     for {
       pc <- profileCollection
       profile <- Profile
-        .fromProfileInput(profileInput)
+        .fromProfileInput(args.profileInput)
         // Replace the newly generated PID with the old PID:
-        .map(_.copy(pid = pid)) match {
+        .map(_.copy(pid = args.pid)) match {
         case Failure(exception) => Future.successful(Left(exception.toString))
         case Success(p) =>
-          pc.upsert[io.circe.Json](pid.toString, p.asJson) map (_ => Right(p))
+          pc.upsert[io.circe.Json](args.pid.toString, p.asJson) map (_ => Right(p))
       }
     } yield profile
   }
@@ -75,16 +78,12 @@ class CouchbaseProfileController(
     } yield removeResult
   }
 
-  override def profileListing(
-      limit: Option[Int],
-      skip: Option[Int],
-      search: String
-  ): Future[Either[String, List[Profile]]] = {
+  override def profileListing(args: ProfileListingInput): Future[Either[String, List[Profile]]] = {
     val query = s"SELECT p.* FROM " +
       s"`${quickstartConfig.couchbase.bucketName}`.`_default`.`${quickstartConfig.couchbase.collectionName}` p " +
-      s"WHERE lower(p.firstName) LIKE '%${search.toLowerCase}%' " +
-      s"OR lower(p.lastName) LIKE '%${search.toLowerCase}%'  " +
-      s"LIMIT " + limit.getOrElse(5) + " OFFSET " + skip.getOrElse(0)
+      s"WHERE lower(p.firstName) LIKE '%${args.search.toLowerCase}%' " +
+      s"OR lower(p.lastName) LIKE '%${args.search.toLowerCase}%'  " +
+      s"LIMIT " + args.limit.getOrElse(5) + " OFFSET " + args.skip.getOrElse(0)
 
     import cats.implicits._
     for {

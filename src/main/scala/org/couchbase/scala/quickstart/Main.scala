@@ -1,16 +1,15 @@
 package org.couchbase.scala.quickstart
 
-import akka.http.scaladsl.Http.ServerBinding
-import cats.effect.{Fiber, FiberIO}
 import org.couchbase.scala.quickstart.components.ProdCouchbaseConnection
 import org.couchbase.scala.quickstart.config.QuickstartConfig
-import org.couchbase.scala.quickstart.controllers.{CouchbaseProfileController, IOProfileController}
-import org.couchbase.scala.quickstart.servers.{ProfileServerAkkaHttp, ProfileServerHttp4s, ProfileServerPlay}
+import org.couchbase.scala.quickstart.controllers.CouchbaseProfileController
 import pureconfig.ConfigSource
+import sttp.tapir.server.ServerEndpoint
 
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.io.StdIn
+import sttp.tapir.server.netty.{FutureRoute, NettyFutureServer, NettyFutureServerInterpreter}
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -30,63 +29,28 @@ object Main {
     lazy val profileController =
       new CouchbaseProfileController(couchbaseConnection, quickstartConfig)
 
-    lazy val akkaServer = new ProfileServerAkkaHttp(profileController)
-    lazy val http4sServer = new ProfileServerHttp4s(
-      new IOProfileController(profileController)
-    )
-    lazy val playProfileServer = new ProfileServerPlay(profileController)
-
 
     // Set up the indexes and collections. This can take a bit.
     Await.result(couchbaseConnection.bucket, 30.seconds)
     Await.result(profileController.setupIndexesAndCollections(), 30.seconds)
 
-    // Start servers!
-    // Note that we only start a server when there is accompanying config in application.conf.
+    val swaggerRoute = NettyFutureServerInterpreter().toRoute(Endpoints.swaggerEndpoints)(ExecutionContext.global)
 
-    // Start Akka HTTP server:
-    val akkaFutureBinding: Option[Future[ServerBinding]] =
-      quickstartConfig.akkaHttp match {
-        case Some(akkaConfig) =>
-          val binding = akkaServer.startAkkaHttpServer()
-          println(
-            s"Akka running, see http://localhost:${akkaConfig.port}/docs for the Swagger UI"
-          )
-          Some(binding)
-
-        case None =>
-          println("Akka HTTP config not found. Server will not be started")
-          None
-      }
-
-    // Start Http4s server:
-    val http4sFiber: Option[FiberIO[Nothing]] = quickstartConfig.http4s match {
-      case Some(http4sConfig) =>
-        val fiber = http4sServer.startServer(http4sServer.buildServerDefinition())
-        println(s"http4s server running, see http://localhost:${http4sConfig.port}/docs")
-        Some(fiber)
-      case None =>
-        println("http4s config not found. Server will not be started")
-        None
-    }
-
-    // Start Play server:
-    val playHttpServer = quickstartConfig.play match {
-      case Some(playConfig) =>
-        val server = playProfileServer.startServer()
-        println(s"Play server running, see http://localhost:${playConfig.port}/docs")
-        Some(server)
-      case None =>
-        println("Play config not found. Server will not be started")
-        None
-    }
+    // Start the server!
+    val server = Await.result(NettyFutureServer()(ExecutionContext.global)
+      .port(quickstartConfig.netty.port)
+      .addRoute(swaggerRoute)
+      .addEndpoint(Endpoints.profileListing.serverLogic(profileController.profileListing _))
+      .addEndpoint(Endpoints.getProfile.serverLogic(profileController.getProfile _))
+      .addEndpoint(Endpoints.postProfile.serverLogic(profileController.postProfile _))
+      .addEndpoint(Endpoints.putProfile.serverLogic(profileController.putProfile _))
+      .addEndpoint(Endpoints.deleteProfile.serverLogic(profileController.deleteProfile _))
+      .start(), 1.seconds)
 
     // Wait for input to stop the servers from immediately being wound down.
     StdIn.readLine()
 
-    // Stop all servers:
-    akkaFutureBinding foreach akkaServer.stopAkkaHttpServer
-    http4sFiber foreach http4sServer.stopServer
-    playHttpServer foreach playProfileServer.stopServer
+    // Stop the server:
+    server.stop()
   }
 }

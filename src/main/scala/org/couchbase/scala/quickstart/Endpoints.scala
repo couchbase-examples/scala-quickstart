@@ -1,18 +1,20 @@
 package org.couchbase.scala.quickstart
 
-import org.couchbase.scala.quickstart.models.{Profile, ProfileInput}
+import org.couchbase.scala.quickstart.models.{Profile, ProfileInput, ProfileListingInput, PutProfileInput}
+import sttp.model.QueryParams
 import sttp.tapir._
-import sttp.tapir.docs.openapi._
+import sttp.tapir.docs.openapi.OpenAPIDocsOptions
 import sttp.tapir.json.circe.jsonBody
-import sttp.tapir.openapi.circe.yaml._
+import sttp.tapir.swagger.SwaggerUIOptions
+import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
 import java.util.UUID
-import java.util.concurrent.Future
+import scala.concurrent.Future
 
 object Endpoints {
   // Base end point for Profiles.
   // /api/v1/profile
-  val profileBaseEndpoint = endpont
+  val profileBaseEndpoint = endpoint
     .in("api" / "v1" / "profile")
 
   // GET /profile?id=uuid
@@ -31,6 +33,7 @@ object Endpoints {
   val putProfile = profileBaseEndpoint.put
     .in(query[UUID]("id"))
     .in(jsonBody[ProfileInput])
+    .mapIn(e => PutProfileInput(e._1, e._2))(ppi => (ppi.pid, ppi.profileInput))
     .errorOut(stringBody)
     .out(jsonBody[Profile])
 
@@ -46,15 +49,22 @@ object Endpoints {
     .in(query[Option[Int]]("limit"))
     .in(query[Option[Int]]("skip"))
     .in(query[String]("search"))
+    .mapIn(data => ProfileListingInput(data._1, data._2, data._3))(pli => (pli.limit, pli.skip, pli.search))
     .out(jsonBody[List[Profile]])
     .errorOut(stringBody)
 
-  def endpoints = List(postProfile, getProfile, deleteProfile, profileListing)
+  def endpoints = List(
+    postProfile,
+    getProfile,
+    deleteProfile,
+    profileListing
+  )
+
+
   def swaggerEndpoints = SwaggerInterpreter()
     .fromEndpoints[Future](
       endpoints,
-      "Couchbae profile API",
+      "Couchbase profile API",
       "1.0"
     )
-
 }
