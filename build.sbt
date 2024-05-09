@@ -18,7 +18,7 @@ lazy val root = project
     name := "Couchbase Scala Quickstart"
   )
 
-val circeVersion = "0.14.1"
+val circeVersion = "0.14.6"
 val tapirVersion = "1.10.5"
 
 libraryDependencies ++= Seq(
@@ -31,6 +31,9 @@ libraryDependencies ++= Seq(
   "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion,
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
+  "io.circe" %% "circe-generic-extras" % circeVersion,
+  "io.circe" %% "circe-derivation" % circeVersion,
+  "io.circe" %% "circe-parser" % circeVersion,
   "org.scalatest" %% "scalatest" % "3.2.18" % "test",
 )
 

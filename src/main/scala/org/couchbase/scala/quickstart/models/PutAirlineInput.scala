@@ -5,7 +5,7 @@ import sttp.tapir.{EndpointInput, query}
 
 import java.util.UUID
 
-case class PutProfileInput (
-                           pid: UUID,
-                           profileInput: ProfileInput
+case class PutAirlineInput(
+                            id: UUID,
+                            airlineInput: AirlineInput
                            )
