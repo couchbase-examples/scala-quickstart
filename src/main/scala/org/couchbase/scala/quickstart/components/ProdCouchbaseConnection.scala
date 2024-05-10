@@ -55,13 +55,15 @@ class ProdCouchbaseConnection(quickstartConfig: QuickstartConfig)
 
     for {
       cl <- cluster
-      // Try to get the bucket, and if it fails, create it instead.
+      // Try to get the bucket, and if it fails, log an error and exit.
       _ <- Future.fromTry(
         cl.buckets
           .getBucket(quickstartConfig.couchbase.bucketName)
-          // Note: at the moment it will fail to create a bucket with Capella enabled. Instead, the user will need to
-          // create it via the Capella user interface.
-          .recoverWith { case NonFatal(_) => cl.buckets.create(bucketSettings) }
+          .recoverWith { case NonFatal(_) => {
+            System.err.println(String.format("Error: unable to find bucket '%s'", quickstartConfig.couchbase.bucketName))
+            System.exit(1)
+            null
+          } }
       )
       // Buckets are created async, so we block here instead.
       _ <- Future.fromTry(cl.waitUntilReady(30.seconds))

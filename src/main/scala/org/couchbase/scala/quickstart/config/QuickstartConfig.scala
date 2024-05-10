@@ -5,9 +5,7 @@ import pureconfig.generic.semiauto.deriveReader
 
 final case class QuickstartConfig(
     couchbase: CouchbaseConfig,
-    akkaHttp: Option[AkkaHttpConfig],
-    http4s: Option[Http4sConfig],
-    play: Option[PlayConfig]
+    netty: NettyConfig,
 )
 
 object QuickstartConfig {

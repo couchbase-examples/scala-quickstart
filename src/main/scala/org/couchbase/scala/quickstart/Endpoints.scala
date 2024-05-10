@@ -1,59 +1,70 @@
 package org.couchbase.scala.quickstart
 
-import org.couchbase.scala.quickstart.models.{Profile, ProfileInput}
+import org.couchbase.scala.quickstart.models.{Airline, AirlineInput, AirlineListingInput, PutAirlineInput}
+import sttp.model.QueryParams
 import sttp.tapir._
-import sttp.tapir.docs.openapi._
+import sttp.tapir.docs.openapi.OpenAPIDocsOptions
 import sttp.tapir.json.circe.jsonBody
-import sttp.tapir.openapi.circe.yaml._
+import sttp.tapir.swagger.SwaggerUIOptions
+import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
 import java.util.UUID
+import scala.concurrent.Future
 
 object Endpoints {
-  // Base end point for Profiles.
-  // /api/v1/profile
-  val profileBaseEndpoint = endpoint
-    .in("api" / "v1" / "profile")
+  // Base end point for Airlines.
+  // /api/v1/airline
+  val airlineBaseEndpoint = endpoint
+    .in("api" / "v1" / "airline")
 
-  // GET /profile?id=uuid
-  val getProfile = profileBaseEndpoint.get
+  // GET /airline?id=uuid
+  val getAirline = airlineBaseEndpoint.get
     .in(query[UUID]("id"))
-    .out(jsonBody[Profile])
+    .out(jsonBody[Airline])
     .errorOut(stringBody)
 
-  // POST /profile with JSON Profile body
-  val postProfile = profileBaseEndpoint.post
-    .in(jsonBody[ProfileInput])
+  // POST /airline with JSON Profile body
+  val postAirline = airlineBaseEndpoint.post
+    .in(jsonBody[AirlineInput])
     .errorOut(stringBody)
-    .out(jsonBody[Profile])
+    .out(jsonBody[Airline])
 
-  // PUT /profile?id=uuid with JSON Profile body
-  val putProfile = profileBaseEndpoint.put
+  // PUT /airline?id=uuid with JSON Airline body
+  val putAirline = airlineBaseEndpoint.put
     .in(query[UUID]("id"))
-    .in(jsonBody[ProfileInput])
+    .in(jsonBody[AirlineInput])
+    .mapIn(e => PutAirlineInput(e._1, e._2))(pai => (pai.id, pai.airlineInput))
     .errorOut(stringBody)
-    .out(jsonBody[Profile])
+    .out(jsonBody[Airline])
 
-  // DELETE /profile?id=uuid
-  val deleteProfile = profileBaseEndpoint.delete
+  // DELETE /airline?id=uuid
+  val deleteAirline = airlineBaseEndpoint.delete
     .in(query[UUID]("id"))
     .out(jsonBody[UUID])
     .errorOut(stringBody)
 
-  // GET /profiles?limit=m&skip=n&search=string
-  val profileListing = profileBaseEndpoint.get
-    .in("profiles")
+  // GET /airlines?limit=m&skip=n&search=string
+  val airlineListing = airlineBaseEndpoint.get
+    .in("airlines")
     .in(query[Option[Int]]("limit"))
     .in(query[Option[Int]]("skip"))
     .in(query[String]("search"))
-    .out(jsonBody[List[Profile]])
+    .mapIn(data => AirlineListingInput(data._1, data._2, data._3))(ali => (ali.limit, ali.skip, ali.search))
+    .out(jsonBody[List[Airline]])
     .errorOut(stringBody)
 
-  def openapiYamlDocumentation: String = OpenAPIDocsInterpreter()
-    .toOpenAPI(
-      List(postProfile, getProfile, deleteProfile, profileListing),
-      "Couchbase profile API",
+  def endpoints = List(
+    postAirline,
+    getAirline,
+    deleteAirline,
+    airlineListing
+  )
+
+
+  def swaggerEndpoints = SwaggerInterpreter()
+    .fromEndpoints[Future](
+      endpoints,
+      "Couchbase airline API",
       "1.0"
     )
-    .toYaml
-
 }
