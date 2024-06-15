@@ -26,13 +26,9 @@ The application can be run via your IDE or from the terminal:
 sbt run
 ```
 
-The application will keep running until you provide a line of input, after which it will shut down the web servers.
+The application will keep running until you provide a line of input, after which it will shut down the web server.
 
-You can launch your browser and go to each web server's Swagger start page: 
-
-* <a target="_blank" rel="noopener noreferrer" href="http://localhost:8081/docs">Akka HTTP server</a>
-* <a target="_blank" rel="noopener noreferrer" href="http://localhost:8082/docs">htt4ps server</a>
-* <a target="_blank" rel="noopener noreferrer" href="http://localhost:8083/docs">Play server</a>
+You can launch your browser and go to applications's <a target="_blank" rel="noopener noreferrer" href="http://localhost:8081/docs">Swagger start page</a>: 
 
 ## Running The Tests
 
