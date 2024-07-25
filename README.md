@@ -10,16 +10,12 @@ Full documentation can be found on the [Couchbase Developer Portal](https://deve
 
 To run this prebuilt project, you will need:
 
+- [Couchbase Capella](https://www.couchbase.com/products/capella/) cluster with [travel-sample](https://docs.couchbase.com/php-sdk/current/ref/travel-app-data-model.html) bucket loaded.
+    - To run this tutorial using a self-managed Couchbase cluster, please refer to the [appendix](#running-self-managed-couchbase-cluster).
 - Scala 2, version 2.13.9 or higher installed
-- Code Editor installed (IntelliJ IDEA, Eclipse, or Visual Studio Code)
-- Set up Couchbase, using one of the two options below
-
-**Option 1: Couchbase Capella**
-- [A Couchbase Capella account](https://cloud.couchbase.com/sign-up) – free trials are available with a simple sign-up
-- Capella Cluster [deployed](https://docs.couchbase.com/cloud/get-started/deploy-first-cluster.html)
-
-**Option 2: Couchbase Server**
-- Follow [Couchbase Installation Options](/tutorial-couchbase-installation-options) for installing the latest Couchbase Database Server Instance (at least Couchbase Server 7)
+- Loading Travel Sample Bucket
+    If travel-sample is not loaded in your Capella cluster, you can load it by following the instructions for your Capella Cluster:
+    - [Load travel-sample bucket in Couchbase Capella](https://docs.couchbase.com/cloud/clusters/data-service/import-data-documents.html#import-sample-data)
 
 ## Source Code
 
