@@ -60,7 +60,7 @@ sbt run
 
 The application will keep running until you provide a line of input, after which it will shut down the web servers.
 
-You can launch your browser and go to API server's [Swagger start page](http://locahost:8080/docs/).
+You can launch your browser and go to API server's [Swagger start page](http://localhost:8080/docs/).
 
 ## What We'll Cover
 
