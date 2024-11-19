@@ -220,7 +220,7 @@ Take notice of the SQL++ syntax and how it targets the `bucket`.`scope`.`collect
 ```scala
   override def airlineListing(args: AirlineListingInput): Future[Either[String, List[Airline]]] = {
   val query = s"SELECT p.* FROM " +
-          s"`${quickstartConfig.couchbase.bucketName}`.`_default`.`${quickstartConfig.couchbase.collectionName}` a " +
+          s"`${quickstartConfig.couchbase.bucketName}`.`${quickstartConfig.couchbase.scopeName}`.`${quickstartConfig.couchbase.collectionName}` a " +
           s"WHERE lower(a.name) LIKE '%${args.search.toLowerCase}%' " +
           s"OR lower(a.country) LIKE '%${args.search.toLowerCase}%'  " +
           s"OR lower(a.callsign) LIKE '%${args.search.toLowerCase}%'  " +

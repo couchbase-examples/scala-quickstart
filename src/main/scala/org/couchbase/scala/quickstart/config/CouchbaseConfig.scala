@@ -9,6 +9,7 @@ final case class CouchbaseConfig(
     password: String,
     bucketName: String,
     bucketSize: Int,
+    scopeName: String,
     collectionName: String,
 )
 
