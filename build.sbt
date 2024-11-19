@@ -31,8 +31,14 @@ libraryDependencies ++= Seq(
   "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion,
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
-  "io.circe" %% "circe-generic-extras" % circeVersion,
-  "io.circe" %% "circe-derivation" % circeVersion,
+  "io.circe" %% "circe-generic-extras" % "0.14.3" excludeAll(
+    ExclusionRule(organization="io.circe", name="circe-core"),
+    ExclusionRule(organization="io.circe", name="circe-generic")
+  ),
+//  "io.circe" %% "circe-derivation" % "0.13.0-M5" excludeAll(
+//    ExclusionRule(organization="io.circe", name="circe-core"),
+//    ExclusionRule(organization="io.circe", name="circe-generic")
+//  ),
   "io.circe" %% "circe-parser" % circeVersion,
   "org.scalatest" %% "scalatest" % "3.2.18" % "test",
 )
