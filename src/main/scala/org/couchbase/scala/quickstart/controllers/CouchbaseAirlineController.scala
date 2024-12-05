@@ -22,7 +22,7 @@ class CouchbaseAirlineController(
 
   val airlineCollection: Future[AsyncCollection] =
     couchbaseConnection.bucket.map(
-      _.async.collection(quickstartConfig.couchbase.collectionName)
+      _.async.scope(quickstartConfig.couchbase.scopeName).collection(quickstartConfig.couchbase.collectionName)
     )
 
   override def getAirline(id: UUID): Future[Either[String, Airline]] = {
