@@ -10,7 +10,6 @@ final case class CouchbaseConfig(
     bucketName: String,
     bucketSize: Int,
     scopeName: String,
-    collectionName: String,
 )
 
 object CouchbaseConfig {
