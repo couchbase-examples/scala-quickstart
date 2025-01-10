@@ -60,7 +60,7 @@ You can launch your browser and go to API server's [Swagger start page](http://l
 
 ## What We'll Cover
 
-Simple REST APIs using the Scala Couchbase SDK with the following endpoints:
+Simple REST APIs using the Scala Couchbase SDK with the following Airline endpoints as example:
 
 - [POST an airline](#post-an-airline) – Create a new airline record
 - [GET an airline by Key](#get-an-airline-by-key) – Get a specific airline
@@ -127,11 +127,6 @@ final case class Airline(
                                 iata: String,
                                 icao: String
                         )
-
-def fromAirlineInput(airlineInput: AirlineInput): Try[Airline] = {
-  airlineInput match {
-    case AirlineInput(name, country, callsign, iata, icao) => Airline(UUID.randomUUID(), name, country, callsign, iata, icao)
-  }
 }
 ```
 
@@ -142,7 +137,7 @@ Note that the [Scala SDK has support for various types of JSON](https://docs.cou
 Once the document is inserted we then return the document saved and the result all as part of the same object back to the user.
 
 ```scala
-override def postAirline(airlineInput: AirlineInput): Future[Either[String, Airline]] = {
+override def post(airlineInput: AirlineInput): Future[Either[String, Airline]] = {
   import io.circe.syntax._
   for {
     ac <- airlineCollection
@@ -164,7 +159,7 @@ passed in the method signature as a string. Since we created the document with a
 the document in the scope and collection it is stored in.
 
 ```scala
-override def getAirline(id: UUID): Future[Either[String, Airline]] = {
+override def get(id: UUID): Future[Either[String, Airline]] = {
   for {
     ac <- airlineCollection
     res <- ac.get(id.toString).map(_.contentAsCirceJson[Airline]).
@@ -218,7 +213,7 @@ Finally, we pass that `query` to the `cluster.query` method and return the resul
 Take notice of the SQL++ syntax and how it targets the `bucket`.`scope`.`collection`.
 
 ```scala
-  override def airlineListing(args: AirlineListingInput): Future[Either[String, List[Airline]]] = {
+  override def list(args: ListingInput): Future[Either[String, List[Airline]]] = {
   val query = s"SELECT p.* FROM " +
           s"`${quickstartConfig.couchbase.bucketName}`.`${quickstartConfig.couchbase.scopeName}`.`${quickstartConfig.couchbase.collectionName}` a " +
           s"WHERE lower(a.name) LIKE '%${args.search.toLowerCase}%' " +
