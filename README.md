@@ -12,7 +12,7 @@ To run this prebuilt project, you will need:
 
 - [Couchbase Capella](https://www.couchbase.com/products/capella/) cluster with [travel-sample](https://docs.couchbase.com/php-sdk/current/ref/travel-app-data-model.html) bucket loaded.
     - To run this tutorial using a self-managed Couchbase cluster, please refer to the [appendix](#running-self-managed-couchbase-cluster).
-- Scala 2, version 2.13.9 or higher installed
+- Scala 2, version 2.13.9 or higher installed with [supported by it JDK](https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html)
 - Loading Travel Sample Bucket
     If travel-sample is not loaded in your Capella cluster, you can load it by following the instructions for your Capella Cluster:
     - [Load travel-sample bucket in Couchbase Capella](https://docs.couchbase.com/cloud/clusters/data-service/import-data-documents.html#import-sample-data)
@@ -51,6 +51,8 @@ At this point the application is ready, and you can run it via your IDE or from 
 ```shell
 sbt run
 ```
+
+> Note: If using multiple JDK installations, you will need to provide the path to the proper JDK home folder using `--jdk-home` argument to `sbt` command. This tutorial was tested to work with JDK17.
 
 > Note: When using Option 2: Couchbase Server, then Couchbase Server 7 must be installed and running on localhost (http://127.0.0.1:8091) prior to running the Scala application.
 
