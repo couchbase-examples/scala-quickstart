@@ -20,31 +20,11 @@ class ProdCouchbaseConnection(quickstartConfig: QuickstartConfig)
     scala.concurrent.ExecutionContext.Implicits.global
 
   override lazy val cluster: Future[Cluster] = Future.fromTry(
-    if (!quickstartConfig.couchbase.capella)
       Cluster.connect(
         quickstartConfig.couchbase.host,
         quickstartConfig.couchbase.username,
         quickstartConfig.couchbase.password
       )
-    else
-      for {
-        clusterEnv <- ClusterEnvironment.builder
-          .securityConfig(
-            SecurityConfig()
-              .enableTls(true)
-              // Disable certificate checking. This should not be used in production!
-              .trustManagerFactory(InsecureTrustManagerFactory.INSTANCE)
-          )
-          .build
-        clusterOptions = ClusterOptions(
-          PasswordAuthenticator(
-            quickstartConfig.couchbase.username,
-            quickstartConfig.couchbase.password
-          ),
-          Some(clusterEnv)
-        )
-        cl <- Cluster.connect(quickstartConfig.couchbase.host, clusterOptions)
-      } yield cl
   )
 
   override lazy val bucket: Future[Bucket] = {
