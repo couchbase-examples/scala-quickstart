@@ -58,7 +58,7 @@ class CouchbaseHotelController(
   }
 
   override def list(args: ListingInput): Future[Either[String, List[Hotel]]] = {
-    val query = s"SELECT p.* FROM " +
+    val query = s"SELECT a.* FROM " +
       s"`${quickstartConfig.couchbase.bucketName}`.`${quickstartConfig.couchbase.scopeName}`.`hotel` a " +
       s"WHERE lower(a.name) LIKE '%${args.search.toLowerCase}%' " +
       s"OR lower(a.description) LIKE '%${args.search.toLowerCase}%'  " +
