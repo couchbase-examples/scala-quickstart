@@ -56,7 +56,7 @@ class CouchbaseAirportController(
   }
 
   override def list(args: ListingInput): Future[Either[String, List[Airport]]] = {
-    val query = s"SELECT p.* FROM " +
+    val query = s"SELECT a.* FROM " +
       s"`${quickstartConfig.couchbase.bucketName}`.`${quickstartConfig.couchbase.scopeName}`.`airport` a " +
       s"WHERE lower(a.airportname) LIKE '%${args.search.toLowerCase}%' " +
       s"OR lower(a.country) LIKE '%${args.search.toLowerCase}%'  " +

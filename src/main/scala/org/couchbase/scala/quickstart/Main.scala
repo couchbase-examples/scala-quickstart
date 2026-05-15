@@ -56,7 +56,7 @@ object Main {
 
     serverConfig = serverConfig.addRoute(NettyFutureServerInterpreter().toRoute(swaggerEndpoints)(ExecutionContext.global))
     // start the server
-    val server = Await.result(serverConfig.start(), 1.seconds)
+    val server = Await.result(serverConfig.start(), 10.seconds)
 
     // Wait for input to stop the servers from immediately being wound down.
     StdIn.readLine()

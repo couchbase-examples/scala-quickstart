@@ -56,7 +56,7 @@ class CouchbaseLandmarkController(
   }
 
   override def list(args: ListingInput): Future[Either[String, List[Landmark]]] = {
-    val query = s"SELECT p.* FROM " +
+    val query = s"SELECT a.* FROM " +
       s"`${quickstartConfig.couchbase.bucketName}`.`${quickstartConfig.couchbase.scopeName}`.`landmark` a " +
       s"WHERE lower(a.name) LIKE '%${args.search.toLowerCase}%' " +
       s"OR lower(a.content) LIKE '%${args.search.toLowerCase}%'  " +
