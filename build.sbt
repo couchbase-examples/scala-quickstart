@@ -18,20 +18,20 @@ lazy val root = project
     name := "Couchbase Scala Quickstart"
   )
 
-val circeVersion = "0.14.6"
-val tapirVersion = "1.10.5"
+val circeVersion = "0.14.16"
+val tapirVersion = "1.10.15"
 
 libraryDependencies ++= Seq(
-  "ch.qos.logback" % "logback-classic" % "1.5.3",
-  "com.couchbase.client" %% "scala-client" % "1.6.0",
-  "com.github.pureconfig" %% "pureconfig" % "0.17.6",
+  "ch.qos.logback" % "logback-classic" % "1.5.38",
+  "com.couchbase.client" %% "scala-client" % "1.8.3",
+  "com.github.pureconfig" %% "pureconfig" % "0.17.10",
   "com.github.t3hnar" %% "scala-bcrypt" % "4.3.0",
   "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-netty-server" % tapirVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion,
   "io.circe" %% "circe-core" % circeVersion,
   "io.circe" %% "circe-generic" % circeVersion,
-  "io.circe" %% "circe-generic-extras" % "0.14.3" excludeAll(
+  "io.circe" %% "circe-generic-extras" % "0.14.4" excludeAll(
     ExclusionRule(organization="io.circe", name="circe-core"),
     ExclusionRule(organization="io.circe", name="circe-generic")
   ),
@@ -40,7 +40,7 @@ libraryDependencies ++= Seq(
 //    ExclusionRule(organization="io.circe", name="circe-generic")
 //  ),
   "io.circe" %% "circe-parser" % circeVersion,
-  "org.scalatest" %% "scalatest" % "3.2.18" % "test",
+  "org.scalatest" %% "scalatest" % "3.2.20" % "test",
 )
 
 // If you're using Scala 2.12: then the following flag is useful for Tapir, to prevent having to annotate type arguments.
