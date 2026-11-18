@@ -35,6 +35,10 @@ jobs:
           java-version: 17
           cache: sbt
 
+      # sbt is no longer preinstalled on GitHub-hosted Ubuntu runners
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+
       - name: Setup couchbase
         run: |
           apt install -y iputils-ping || echo "apt-install failed"
