@@ -43,6 +43,10 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.2.20" % "test",
 )
 
+// Security: tapir-netty-server 1.10.15 pulls netty-all 4.1.112.Final, which has many
+// known advisories. Pin the Netty 4.1 line to a patched release.
+dependencyOverrides += "io.netty" % "netty-all" % "4.1.141.Final"
+
 // If you're using Scala 2.12: then the following flag is useful for Tapir, to prevent having to annotate type arguments.
 //ThisBuild / scalacOptions += "-Ypartial-unification"
 
