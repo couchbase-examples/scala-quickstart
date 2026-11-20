@@ -35,6 +35,10 @@ jobs:
           java-version: 17
           cache: sbt
 
+      # sbt is no longer preinstalled on GitHub-hosted Ubuntu runners
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+
       - name: Setup couchbase
         run: |
           apt install -y iputils-ping || echo "apt-install failed"
@@ -79,7 +83,7 @@ jobs:
 
       - name: Report Status
         if: always()
-        uses: ravsamhq/notify-slack-action@v1
+        uses: ravsamhq/notify-slack-action@v2
         with:
           status: ${{ job.status }}
           notify_when: 'failure,warnings'
