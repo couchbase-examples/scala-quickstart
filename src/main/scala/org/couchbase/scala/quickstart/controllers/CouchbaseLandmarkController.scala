@@ -2,7 +2,6 @@ package org.couchbase.scala.quickstart.controllers
 
 import com.couchbase.client.core.error.DocumentNotFoundException
 import com.couchbase.client.scala.AsyncCollection
-import com.couchbase.client.scala.query.{QueryOptions, QueryScanConsistency}
 import org.couchbase.scala.quickstart.components.ProdCouchbaseConnection
 import org.couchbase.scala.quickstart.config.QuickstartConfig
 import org.couchbase.scala.quickstart.models.CirceGetResult._
@@ -56,34 +55,14 @@ class CouchbaseLandmarkController(
   }
 
   override def list(args: ListingInput): Future[Either[String, List[Landmark]]] = {
-    val query = s"SELECT a.* FROM " +
-      s"`${quickstartConfig.couchbase.bucketName}`.`${quickstartConfig.couchbase.scopeName}`.`landmark` a " +
-      s"WHERE lower(a.name) LIKE '%${args.search.toLowerCase}%' " +
-      s"OR lower(a.content) LIKE '%${args.search.toLowerCase}%'  " +
-      s"OR lower(a.title) LIKE '%${args.search.toLowerCase}%'  " +
-      s"OR lower(a.country) LIKE '%${args.search.toLowerCase}%'  " +
-      s"OR lower(a.state) LIKE '%${args.search.toLowerCase}%'  " +
-      s"OR lower(a.city) LIKE '%${args.search.toLowerCase}%'  " +
-      s"LIMIT " + args.limit.getOrElse(5) + " OFFSET " + args.skip.getOrElse(0)
-
-    import cats.implicits._
-    for {
-      cluster <- couchbaseConnection.cluster
-      rows <- Future.fromTry(
-        cluster.query(
-          query,
-          QueryOptions(scanConsistency =
-            Some(QueryScanConsistency.RequestPlus())
-          )
-        )
-      )
-      landmarks <- Future.fromTry(
-        rows
-          .rowsAs[io.circe.Json]
-          .map(_.map(json => json.as[Landmark].left.map(_.getMessage())))
-      )
-      accumulatedLandmarks = landmarks.toList.sequence
-    } yield accumulatedLandmarks
+    val query = ListingQuery(
+      quickstartConfig.couchbase.bucketName,
+      quickstartConfig.couchbase.scopeName,
+      "landmark",
+      Seq("name", "content", "title", "country", "state", "city"),
+      args
+    )
+    couchbaseConnection.cluster.flatMap(ListingQuery.run[Landmark](_, query))
   }
 
   override def modelType() = classOf[Landmark]
