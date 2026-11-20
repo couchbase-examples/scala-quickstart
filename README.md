@@ -202,48 +202,44 @@ ac.remove(id.toString)
 [SQL++ (N1QL)](https://docs.couchbase.com/scala-sdk/current/howtos/n1ql-queries-with-sdk.html) is a powerful query language based on SQL, but designed for structured and flexible JSON documents.
 We will use a SQL++ query to search for profiles with Skip, Limit, and Search options.
 
-Navigate to the `getAirlines` method in the `CouchbaseAirlineController` class. This endpoint is different from all
+Navigate to the `list` method in the `CouchbaseAirlineController` class. This endpoint is different from all
 the others because it makes the SQL++ query rather than a key-value operation. This means more overhead because the
 query engine is involved. You may need to create an [index](https://docs.couchbase.com/server/current/learn/services-and-indexes/indexes/indexing-and-query-perf.html)
 specific for this query on fields `name`, `country`, `callsign`, `icao`, `iata`, so it would be performant.
 
 The individual `skip` (optional), `limit` (optional), and `search` values are obtained from their respective parameters.
-Then, we build our SQL++ query using the parameters that were passed in.
+Every listing controller (airline, airport, hotel, landmark) builds its query with the shared `ListingQuery` in
+`controllers/ListingQuery.scala`. The controller only says which collection and which fields to search.
+`ListingQuery` writes the SQL++ statement and passes `search`, `limit`, and `skip` as
+[named query parameters](https://docs.couchbase.com/scala-sdk/current/howtos/n1ql-queries-with-sdk.html#parameterized-queries)
+(`$search`, `$limit`, `$skip`), so user input is never concatenated into the statement text.
 
-Finally, we pass that `query` to the `cluster.query` method and return the result.
+`ListingQuery.run` then passes the statement and its options to `cluster.query` and decodes each row into the model.
 
 Take notice of the SQL++ syntax and how it targets the `bucket`.`scope`.`collection`.
 
 ```scala
   override def list(args: ListingInput): Future[Either[String, List[Airline]]] = {
-  val query = s"SELECT a.* FROM " +
-          s"`${quickstartConfig.couchbase.bucketName}`.`${quickstartConfig.couchbase.scopeName}`.`${quickstartConfig.couchbase.collectionName}` a " +
-          s"WHERE lower(a.name) LIKE '%${args.search.toLowerCase}%' " +
-          s"OR lower(a.country) LIKE '%${args.search.toLowerCase}%'  " +
-          s"OR lower(a.callsign) LIKE '%${args.search.toLowerCase}%'  " +
-          s"OR lower(a.iata) LIKE '%${args.search.toLowerCase}%'  " +
-          s"OR lower(a.icao) LIKE '%${args.search.toLowerCase}%'  " +
-          s"LIMIT " + args.limit.getOrElse(5) + " OFFSET " + args.skip.getOrElse(0)
-
-  import cats.implicits._
-  for {
-    cluster <- couchbaseConnection.cluster
-    rows <- Future.fromTry(
-      cluster.query(
-        query,
-        QueryOptions(scanConsistency =
-          Some(QueryScanConsistency.RequestPlus())
-        )
-      )
+    val query = ListingQuery(
+      quickstartConfig.couchbase.bucketName,
+      quickstartConfig.couchbase.scopeName,
+      "airline",
+      Seq("name", "country", "callsign", "iata", "icao"),
+      args
     )
-    airlines <- Future.fromTry(
-      rows
-              .rowsAs[io.circe.Json]
-              .map(_.map(json => json.as[Airline].left.map(_.getMessage())))
-    )
-    accumulatedAirlines = airlines.toList.sequence
-  } yield accumulatedAirlines
-}
+    couchbaseConnection.cluster.flatMap(ListingQuery.run[Airline](_, query))
+  }
 ```
 
-> *from getAirlines method of controllers/CouchbaseAirlineController.scala*
+> *from list method of controllers/CouchbaseAirlineController.scala*
+
+`ListingQuery` produces a statement like:
+
+```sql
+SELECT a.* FROM `travel-sample`.`inventory`.`airline` a
+WHERE lower(a.name) LIKE $search OR lower(a.country) LIKE $search OR ...
+LIMIT $limit OFFSET $skip
+```
+
+with `search` bound to `%<lower-cased search>%`, `limit` defaulting to 5 and `skip` to 0.
+

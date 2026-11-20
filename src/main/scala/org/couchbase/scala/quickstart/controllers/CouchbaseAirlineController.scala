@@ -2,7 +2,6 @@ package org.couchbase.scala.quickstart.controllers
 
 import com.couchbase.client.core.error.DocumentNotFoundException
 import com.couchbase.client.scala.AsyncCollection
-import com.couchbase.client.scala.query.{QueryOptions, QueryScanConsistency}
 import io.circe.{Decoder, Encoder}
 import org.couchbase.scala.quickstart.components.ProdCouchbaseConnection
 import org.couchbase.scala.quickstart.config.QuickstartConfig
@@ -59,33 +58,14 @@ class CouchbaseAirlineController(
   }
 
   override def list(args: ListingInput): Future[Either[String, List[Airline]]] = {
-    val query = s"SELECT a.* FROM " +
-      s"`${quickstartConfig.couchbase.bucketName}`.`${quickstartConfig.couchbase.scopeName}`.`airline` a " +
-      s"WHERE lower(a.name) LIKE '%${args.search.toLowerCase}%' " +
-      s"OR lower(a.country) LIKE '%${args.search.toLowerCase}%'  " +
-      s"OR lower(a.callsign) LIKE '%${args.search.toLowerCase}%'  " +
-      s"OR lower(a.iata) LIKE '%${args.search.toLowerCase}%'  " +
-      s"OR lower(a.icao) LIKE '%${args.search.toLowerCase}%'  " +
-      s"LIMIT " + args.limit.getOrElse(5) + " OFFSET " + args.skip.getOrElse(0)
-
-    import cats.implicits._
-    for {
-      cluster <- couchbaseConnection.cluster
-      rows <- Future.fromTry(
-        cluster.query(
-          query,
-          QueryOptions(scanConsistency =
-            Some(QueryScanConsistency.RequestPlus())
-          )
-        )
-      )
-      airlines <- Future.fromTry(
-        rows
-          .rowsAs[io.circe.Json]
-          .map(_.map(json => json.as[Airline].left.map(_.getMessage())))
-      )
-      accumulatedAirlines = airlines.toList.sequence
-    } yield accumulatedAirlines
+    val query = ListingQuery(
+      quickstartConfig.couchbase.bucketName,
+      quickstartConfig.couchbase.scopeName,
+      "airline",
+      Seq("name", "country", "callsign", "iata", "icao"),
+      args
+    )
+    couchbaseConnection.cluster.flatMap(ListingQuery.run[Airline](_, query))
   }
 
   override def endpoints(): (List[AnyEndpoint], List[ServerEndpoint[Any, Future]]) = super.endpointDefs()(
